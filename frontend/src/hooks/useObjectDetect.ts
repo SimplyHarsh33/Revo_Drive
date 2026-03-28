@@ -35,12 +35,12 @@ export const useObjectDetect = (videoRef: React.RefObject<HTMLVideoElement | nul
     const detectFrame = async () => {
       if (video.readyState >= 2) {
         frameCount++;
-        if (frameCount % 10 === 0) {
+        if (frameCount % 5 === 0) {
           const predictions = await modelRef.current!.detect(video);
           
-          // Filter for distracted driving objects with strict 60% confidence threshold
+          // Filter with a more sensitive 40% confidence threshold to catch more objects
           const items = predictions
-             .filter(p => p.score > 0.6) 
+             .filter(p => p.score > 0.40) 
              .map(p => p.class);
              
           setDetectedItems(items);
