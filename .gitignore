@@ -1,0 +1,6 @@
+# Ignore system files and PowerPoint locks
+*.pptx
+~$*.pptx
+__pycache__/
+*.db
+*.sqlite3

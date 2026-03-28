@@ -1,0 +1,172 @@
+
+============================================================
+FILE: DriveSafe_AI_Engineering.pptx
+============================================================
+
+
+============================================================
+FILE: DriveSafe_Team_Roles.pptx
+============================================================
+
+--- Slide 1 ---
+DriveSafe AI
+Team Roles & Learning Guide
+M
+Mallika
+ML Lead
+H
+Harsh
+Frontend
+J
+Jivit
+Backend
+D
+Divyanshu
+Object Det.
+H
+Hemant
+DevOps
+Five members. Five domains. One production-grade AI system.
+
+--- Slide 2 ---
+M
+Mallika — ML Engineer & Project Lead
+ML Engineer & Project Lead | Computer Vision Core + Project Architecture
+1/5
+Domain: Computer Vision Core + Project Architecture
+What You Own
+MediaPipe FaceMesh integration (468 landmarks)
+EAR & MAR algorithm implementation in earCalculator.ts
+useFaceMesh.ts and useObjectDetect.ts custom hooks
+Drowsiness Score formula (0-100 composite metric)
+Overall system architecture and /brain agentic memory
+face_analyzer.py — Python-side EAR/MAR via scipy
+What You Must Learn
+MediaPipe FaceMesh: how 468 3D landmarks are extracted
+EAR formula from Soukupova & Cech 2016 paper
+MAR formula for yawn detection
+WebAssembly (WASM) — how ML runs in the browser
+scipy.spatial.distance.euclidean() for landmark math
+requestAnimationFrame for 30 FPS inference loop
+Interview Answer:
+I implemented the EAR algorithm using MediaPipe's 468-point landmark model. When eyes close, the vertical landmark distances shrink while horizontal stays constant, dropping EAR below 0.25. At 30 FPS, 20 consecutive frames equals 0.67 seconds — long enough to confirm drowsiness while filtering normal blinks.
+
+--- Slide 3 ---
+H
+Harsh — Frontend Engineer
+Frontend Engineer | React UI, Live Dashboard & Alert System
+2/5
+Domain: React UI, Live Dashboard & Alert System
+What You Own
+WebcamFeed.tsx — camera capture + canvas overlay
+Monitor.tsx — live telemetry dashboard (9xl metrics)
+AlertBanner.tsx — 3-level Framer Motion alerts
+useAlertSound.ts — Web Audio API beep generation
+3-level alert escalation (visual + audio + TTS)
+Tailwind CSS Vivid dark theme (#050B14 background)
+What You Must Learn
+getUserMedia API — how browsers access webcam hardware
+HTML5 Canvas — drawing landmark mesh overlays on video
+Framer Motion — spring-physics animations in React
+Web Audio API — OscillatorNode, AudioContext, frequency
+SpeechSynthesis API — browser-native text-to-speech
+React useRef — DOM access without causing re-renders
+Interview Answer:
+The alert system uses three escalating levels. Level 1 fires a soft 880Hz beep with a yellow banner. Level 2 triggers a pulsing overlay with haptic feedback. Level 3 fires a full-screen red flash and text-to-speech saying Wake up, Pull over safely. A 10-second cooldown prevents alert fatigue from repeated warnings.
+
+--- Slide 4 ---
+J
+Jivit — Backend Engineer
+Backend Engineer | FastAPI Server, Database & REST API Design
+3/5
+Domain: FastAPI Server, Database & REST API Design
+What You Own
+main.py — FastAPI app entry point and CORS middleware
+routers/events.py, sessions.py, websocket.py
+database/db.py — SQLAlchemy engine and SessionLocal
+database/models.py — Session and Event ORM tables
+models/schemas.py — Pydantic request/response models
+services/session_logger.py — event persistence logic
+What You Must Learn
+FastAPI vs Flask vs Django — why async ASGI matters
+SQLAlchemy ORM — Python classes mapped to DB tables
+Pydantic — automatic request validation and serialization
+CORS — why browsers block cross-origin requests
+WebSocket protocol — real-time bidirectional communication
+REST API design — POST /events, GET /sessions/{id}
+Interview Answer:
+FastAPI was chosen over Flask because it is async by default and uses Pydantic for automatic validation. If a client sends an invalid event_type, Pydantic returns a 422 error automatically. SQLAlchemy's ORM abstraction lets us switch from SQLite in dev to PostgreSQL on Supabase in production by changing only one connection string.
+
+--- Slide 5 ---
+D
+Divyanshu — ML Integration & Object Detection
+ML Integration & Object Detection | TF.js COCO-SSD, Phone Detection & GPU Performance
+4/5
+Domain: TF.js COCO-SSD, Phone Detection & GPU Performance
+What You Own
+COCO-SSD model integration via TensorFlow.js
+useObjectDetect.ts — phone detection hook
+Frame-skipping optimisation (runs every 10 frames)
+Bounding box rendering on webcam canvas overlay
+WebGL GPU acceleration configuration for TF.js
+Multi-model fusion: FaceMesh + COCO-SSD concurrent
+What You Must Learn
+TensorFlow.js — running ML models in the browser
+COCO-SSD — 80-class object detection, pre-trained
+WebGL backend — GPU-accelerated inference via graphics API
+Frame skipping — why 3 FPS is enough for phone detection
+Why not YOLOv8 — accuracy vs zero-cost deployment tradeoff
+Confidence threshold 0.6 — filtering false positives
+Interview Answer:
+COCO-SSD was chosen over YOLOv8 because it runs entirely in the browser via TF.js WebGL backend — zero server cost, zero network latency. It is pre-trained on 80 COCO classes including cell phone, achieving 85% accuracy with no training required. I run it every 10 frames because phones don't move fast enough to need 30 FPS detection, halving CPU load.
+
+--- Slide 6 ---
+H
+Hemant — DevOps & Deployment Engineer
+DevOps & Deployment Engineer | Docker, Cloud Deployment & Privacy Architecture
+5/5
+Domain: Docker, Cloud Deployment & Privacy Architecture
+What You Own
+docker-compose.yml — orchestrating all 3 services
+Vercel deployment configuration for React frontend
+Railway/Render deployment for FastAPI backend
+Supabase PostgreSQL production database setup
+Environment variables and .env configuration
+Privacy-by-design: zero video data transmission
+What You Must Learn
+Docker and docker-compose — containerization fundamentals
+Vercel — static site deployment from GitHub repo
+Railway/Render — Docker container hosting on free tier
+Supabase — managed PostgreSQL with connection pooling
+Environment variables — separating secrets from code
+Privacy-by-design — why all inference is client-side
+Interview Answer:
+The entire stack runs at zero cost: React on Vercel, FastAPI on Railway free tier, PostgreSQL on Supabase 500MB free tier. docker-compose lets any developer spin up all three services with one command. The privacy architecture is intentional — all ML inference runs client-side via WebAssembly, so zero video frames are ever transmitted to any server.
+
+--- Slide 7 ---
+Team Responsibility Map
+Layer
+Key Files / Components
+Owner
+Core Technology
+CV Core
+useFaceMesh.ts, earCalculator.ts, face_analyzer.py
+Mallika
+MediaPipe + scipy
+Frontend UI
+WebcamFeed.tsx, Monitor.tsx, AlertBanner.tsx
+Harsh
+React + Framer Motion
+Backend API
+main.py, routers/, database/, schemas.py
+Jivit
+FastAPI + SQLAlchemy
+Object Det.
+useObjectDetect.ts, COCO-SSD model config
+Divyanshu
+TensorFlow.js + WebGL
+DevOps
+docker-compose.yml, Vercel, Railway, Supabase
+Hemant
+Docker + Cloud Platforms
+Every member presents their section. The team can answer questions on any layer.

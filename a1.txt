@@ -1,0 +1,13 @@
+main.py — FastAPI app entry point and CORS middleware
+routers/events.py, sessions.py, websocket.py
+database/db.py — SQLAlchemy engine and SessionLocal
+database/models.py — Session and Event ORM tables
+models/schemas.py — Pydantic request/response models
+services/session_logger.py — event persistence logic
+
+FastAPI vs Flask vs Django — why async ASGI matters
+SQLAlchemy ORM — Python classes mapped to DB tables
+Pydantic — automatic request validation and serialization
+CORS — why browsers block cross-origin requests
+WebSocket protocol — real-time bidirectional communication
+REST API design — POST /events, GET /sessions/{id}
