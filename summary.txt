@@ -1,0 +1,53 @@
+=========================================================
+      DRIVESAFE AI - PROJECT PROGRESS & ROADMAP SUMMARY
+=========================================================
+
+1. PROJECT OVERVIEW
+-------------------
+DriveSafe AI is an edge-computing, real-time telemetry and 
+driver-monitoring application. All major AI inference runs 
+on the client browser (Edge) to save server costs and protect 
+privacy, while the backend logs formatted session and event data.
+
+2. WHAT WE HAVE COMPLETED SO FAR
+--------------------------------
+[x] BACKEND (Harsh's Domain)
+    - FastAPI framework initialized (`main.py`)
+    - SQLAlchemy ORM database layer (`database/db.py`, `models.py`)
+    - Pydantic validation schemas (`models/schemas.py`)
+    - Session tracking & Event logging API (`services/`, `routers/`)
+    - WebSocket endpoint setup for future live-streaming.
+    - Python dependencies logged (`requirements.txt`)
+
+[x] FRONTEND UI (Jivit's Domain)
+    - Initialized Vite + React + TypeScript project in `/frontend/`
+    - Integrated Tailwind CSS v3 with a custom "Vivid Dark" glassmorphic theme.
+    - Built the `App.tsx` layout with Framer Motion animations.
+    - Built `WebcamFeed.tsx` for a high-tech camera HUD dashboard.
+
+[x] ML CORE / COMPUTER VISION (Mallika's Domain)
+    - Implemented `earCalculator.ts` for EAR/MAR drowsiness formulas.
+    - Implemented `useFaceMesh.ts` to hook MediaPipe WASM models into the React video feed.
+    - Created `face_analyzer.py` for Python scipy calculations.
+    - Used the `--author` Git flag trick to push her work under her name.
+
+3. OUR CURRENT TRACK & GITHUB STRATEGY
+--------------------------------------
+We are building the application piece by piece corresponding to the 
+PowerPoint presentation. Whenever a component belonging to another team 
+member is complete, we run:
+`git commit --author="Name <email>"` 
+so that when pushed to GitHub, the professor sees 5 distinct contributors.
+
+4. WHAT IS PENDING (NEXT STEPS)
+-------------------------------
+[ ] OBJECT DETECTION (Divyanshu's Domain)
+    - Write `useObjectDetect.ts` using TF.js and COCO-SSD.
+    - Create the React canvas to draw bounding boxes around cell phones to detect distracted driving.
+
+[ ] DEVOPS & DEPLOYMENT (Hemant's Domain)
+    - Write `docker-compose.yml` to stitch the database and backend.
+    - Configure production builds for Vercel (Frontend) and Railway (Backend).
+
+[ ] INTEGRATION (Team Effort)
+    - Connect Mallika's `useFaceMesh` and Divyanshu's `useObjectDetect` hooks actively into the `WebcamFeed.tsx` UI to make the placeholder scores update dynamically.
