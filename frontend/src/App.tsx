@@ -1,8 +1,35 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import WebcamFeed from './components/WebcamFeed';
+import { useAlertSound } from './hooks/useAlertSound';
 
 function App() {
+  const [drowsiness, setDrowsiness] = useState(0);
+  const [detectedObjects, setDetectedObjects] = useState<string[]>([]);
+  const { playCriticalAlarm, initAudio } = useAlertSound();
+  
+  // Track drowsiness value without triggering unnecessary re-renders in the effect loop
+  const drowsinessRef = useRef(drowsiness);
+  useEffect(() => {
+    drowsinessRef.current = drowsiness;
+  }, [drowsiness]);
+
+  // Trigger continuous audio alarm if drowsiness stays critical
+  useEffect(() => {
+    const alarmInterval = setInterval(() => {
+      // If driver holds eyes closed, the score will stay >70 and the alarm will loop exactly every 1.5 seconds
+      if (drowsinessRef.current > 70) {
+        playCriticalAlarm();
+      }
+    }, 1500); 
+    
+    return () => clearInterval(alarmInterval);
+  }, [playCriticalAlarm]);
+
+  // Calculate status colors dynamically based on drowsy score
+  const statusColor = drowsiness > 70 ? 'from-red-500 to-orange-500' : drowsiness > 40 ? 'from-yellow-500 to-orange-500' : 'from-blue-500 to-indigo-500';
+  const severityText = drowsiness > 70 ? 'CRITICAL' : drowsiness > 40 ? 'WARNING' : 'NORMAL';
+
   return (
     <div className="min-h-screen bg-vividDark text-white font-sans selection:bg-blue-500/30 overflow-hidden relative">
       
@@ -40,9 +67,6 @@ function App() {
             </span>
             <span className="text-emerald-400 text-sm font-semibold tracking-wider hidden sm:block uppercase">System Online</span>
           </div>
-          <button className="px-5 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-medium text-sm text-gray-300 hover:text-white backdrop-blur-md tracking-wide">
-            Settings
-          </button>
         </div>
       </motion.header>
 
@@ -67,20 +91,24 @@ function App() {
                  <div>
                    <div className="flex justify-between text-xs mb-2 text-gray-400 font-medium">
                      <span>Drowsiness Score</span>
-                     <span className="text-blue-400">Low</span>
+                     <span className={drowsiness > 70 ? 'text-red-400 font-bold' : 'text-blue-400'}>{severityText} ({drowsiness}%)</span>
                    </div>
-                   <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
-                     <motion.div initial={{ width: 0 }} animate={{ width: "15%" }} transition={{ delay: 0.8 }} className="h-full bg-gradient-to-r from-blue-500 to-indigo-500" />
+                   <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden shadow-inner">
+                     <motion.div 
+                       animate={{ width: `${Math.max(drowsiness, 2)}%` }} 
+                       transition={{ type: "spring", bounce: 0.2 }} 
+                       className={`h-full bg-gradient-to-r ${statusColor}`} 
+                     />
                    </div>
                  </div>
 
                  <div>
                    <div className="flex justify-between text-xs mb-2 text-gray-400 font-medium">
                      <span>Focus Level</span>
-                     <span className="text-purple-400">98%</span>
+                     <span className={drowsiness > 40 ? 'text-orange-400' : 'text-purple-400'}>{drowsiness > 40 ? 'Dropped' : 'Optimal'}</span>
                    </div>
-                   <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
-                     <motion.div initial={{ width: 0 }} animate={{ width: "98%" }} transition={{ delay: 0.5, duration: 1 }} className="h-full bg-gradient-to-r from-purple-500 to-pink-500" />
+                   <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden shadow-inner">
+                     <motion.div animate={{ width: drowsiness > 40 ? "40%" : "98%" }} transition={{ duration: 0.5 }} className={`h-full bg-gradient-to-r ${drowsiness > 40 ? 'from-orange-500 to-yellow-500' : 'from-purple-500 to-pink-500'}`} />
                    </div>
                  </div>
                </div>
@@ -88,11 +116,26 @@ function App() {
 
             <div className="bg-gradient-to-br from-blue-900/20 to-black/40 backdrop-blur-xl border border-blue-500/20 rounded-2xl p-6 shadow-2xl relative overflow-hidden group hover:border-blue-500/40 transition-all duration-500">
                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl group-hover:bg-blue-500/20 transition-all duration-500 rounded-full -mt-10 -mr-10"></div>
-               <h3 className="text-xs font-bold tracking-widest text-blue-300 uppercase mb-2">Deployed Edge Models</h3>
-               <p className="text-2xl font-light text-white mb-2 tracking-wide">Active</p>
-               <div className="flex gap-2 text-[10px] font-mono font-bold text-blue-200/60 uppercase">
-                 <span className="px-2 py-1 bg-white/5 rounded border border-white/10">FaceMesh</span>
-                 <span className="px-2 py-1 bg-white/5 rounded border border-white/10">COCO-SSD</span>
+               <h3 className="text-xs font-bold tracking-widest text-blue-300 uppercase mb-3 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]">Detected Objects (AI Scan)</h3>
+               <div className="min-h-[4rem] flex items-center">
+                 {detectedObjects.length > 0 ? (
+                   <div className="flex flex-wrap gap-2">
+                     {detectedObjects.map((obj, i) => (
+                        <motion.span 
+                          initial={{ scale: 0.5, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          key={`${obj}-${i}`} 
+                          className="px-3 py-1.5 bg-red-500/20 text-red-300 border border-red-500/30 rounded shadow-[0_0_15px_rgba(239,68,68,0.2)] text-[11px] font-mono font-bold uppercase tracking-wider"
+                        >
+                          [!] {obj}
+                        </motion.span>
+                     ))}
+                   </div>
+                 ) : (
+                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xl font-light text-emerald-400/80 tracking-wide font-mono">
+                     {"<"} Clean Cabin {">"}
+                   </motion.p>
+                 )}
                </div>
             </div>
           </motion.div>
@@ -104,7 +147,10 @@ function App() {
             transition={{ duration: 0.7, delay: 0.1, type: "spring", bounce: 0.4 }}
             className="xl:col-span-3 flex flex-col"
           >
-            <WebcamFeed />
+            <WebcamFeed 
+              onDrowsinessUpdate={setDrowsiness}
+              onDetectUpdate={setDetectedObjects}
+            />
           </motion.div>
           
         </div>

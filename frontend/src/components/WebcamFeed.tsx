@@ -1,9 +1,32 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useFaceMesh } from '../hooks/useFaceMesh';
+import { useObjectDetect } from '../hooks/useObjectDetect';
 
-const WebcamFeed: React.FC = () => {
+interface WebcamFeedProps {
+  onDrowsinessUpdate: (score: number) => void;
+  onDetectUpdate: (items: string[]) => void;
+}
+
+const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpdate }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const { isLoaded: isFaceLoaded, drowsinessScore, isYawning, startInference: startFaceMesh } = useFaceMesh(videoRef, canvasRef);
+  const { isLoaded: isObjectLoaded, detectedItems, startDetection: startObjectDetect } = useObjectDetect(videoRef);
+
+  useEffect(() => {
+    onDrowsinessUpdate(drowsinessScore);
+  }, [drowsinessScore, onDrowsinessUpdate]);
+
+  useEffect(() => {
+    let activeAlerts = [...detectedItems];
+    if (isYawning && !activeAlerts.includes("Yawning Detected")) {
+      activeAlerts.push("Yawning Detected");
+    }
+    onDetectUpdate(activeAlerts);
+  }, [detectedItems, isYawning, onDetectUpdate]);
 
   useEffect(() => {
     async function setupCamera() {
@@ -31,6 +54,18 @@ const WebcamFeed: React.FC = () => {
     };
   }, []);
 
+  const handleVideoLoad = () => {
+    // Start ML loops once video is actively playing!
+    if(isFaceLoaded) startFaceMesh();
+    if(isObjectLoaded) startObjectDetect();
+  }
+
+  // Effect to re-trigger if ML models load late
+  useEffect(() => {
+    if (isFaceLoaded && videoRef.current?.readyState === 4) startFaceMesh();
+    if (isObjectLoaded && videoRef.current?.readyState === 4) startObjectDetect();
+  }, [isFaceLoaded, isObjectLoaded, startFaceMesh, startObjectDetect]);
+
   return (
     <div className="relative w-full aspect-video bg-[#02050A] rounded-3xl overflow-hidden border border-gray-800 shadow-[0_0_50px_rgba(0,0,0,0.8)] group">
       
@@ -42,18 +77,12 @@ const WebcamFeed: React.FC = () => {
 
       {/* Top Overlay HUD */}
       <div className="absolute top-0 inset-x-0 h-28 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none" />
-      
       <div className="absolute top-6 inset-x-8 z-20 flex justify-between items-start pointer-events-none">
         <div className="flex flex-col gap-1">
           <span className="text-[10px] font-bold tracking-[0.2em] text-blue-400 uppercase drop-shadow-[0_0_10px_currentColor]">Camera View 01</span>
           <span className="text-xs font-mono text-gray-300/80 tracking-wider">RES: 1280x720 • FPS: 30</span>
         </div>
-        
-        <motion.div 
-          animate={{ opacity: [1, 0.4, 1] }} 
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 mt-1 py-1.5 rounded-full border border-red-500/30"
-        >
+        <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 mt-1 py-1.5 rounded-full border border-red-500/30">
           <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_12px_rgba(239,68,68,1)]"></div>
           <span className="text-[10px] font-bold tracking-widest text-red-100 uppercase">Live Trace</span>
         </motion.div>
@@ -75,13 +104,21 @@ const WebcamFeed: React.FC = () => {
           <p className="text-red-400 font-medium tracking-wide">{error}</p>
         </div>
       ) : (
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="absolute inset-0 w-full h-full object-cover transform -scale-x-100 z-0 filter contrast-125 brightness-[1.05] grayscale-[0.2]"
-        />
+        <>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            onLoadedData={handleVideoLoad}
+            className="absolute inset-0 w-full h-full object-cover transform -scale-x-100 z-0 filter contrast-125 brightness-[1.05] grayscale-[0.2]"
+          />
+          {/* Canvas for Drawing FaceMesh over standard video */}
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full object-cover transform -scale-x-100 z-10 pointer-events-none"
+          />
+        </>
       )}
       
       {/* Bottom Overlay HUD */}
@@ -94,7 +131,9 @@ const WebcamFeed: React.FC = () => {
           </div>
           <div className="bg-blue-900/40 backdrop-blur-md border border-blue-500/40 px-5 py-3 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.2)]">
             <p className="text-[10px] text-blue-300 uppercase tracking-widest mb-1 font-semibold">AI Scanner</p>
-            <p className="text-sm font-mono text-blue-100 tracking-wider">Awaiting FaceMesh Init...</p>
+            <p className="text-sm font-mono text-blue-100 tracking-wider">
+              {isFaceLoaded && isObjectLoaded ? "FaceMesh + TF.js Active" : "Initializing AI..."}
+            </p>
           </div>
         </div>
       </div>
