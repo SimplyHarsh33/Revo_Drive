@@ -78,11 +78,7 @@ export const useFaceMesh = (
           const landmarks = results.faceLandmarks[0];
           
           // Draw the beautiful High-Tech Grid Over The Face
-          drawingUtils.drawConnectors(
-            landmarks,
-            FaceLandmarker.FACE_LANDMARKS_TESSELATION,
-            { color: "#3B82F660", lineWidth: 1 } // Glowing blue
-          );
+          // drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_TESSELATION, { color: "#3B82F660", lineWidth: 1 }) -> HEAVY ON CPU
           drawingUtils.drawConnectors(
             landmarks,
             FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
