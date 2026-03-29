@@ -1,6 +1,25 @@
-fastapi
-uvicorn[standard]
-sqlalchemy
-pydantic
-scipy
-numpy
+# ── Backend dependencies for DriveSafe AI ──────────────────────────────────
+# Pin exact versions so the project runs identically on any machine.
+# Install with:  pip install -r requirements.txt
+
+# Web framework
+fastapi==0.115.12
+
+# ASGI server (includes websockets, httptools, uvloop on Linux/Mac)
+uvicorn[standard]==0.34.0
+
+# WebSocket support (required by FastAPI WebSocket routes)
+websockets==14.2
+
+# Form / file upload support (needed by FastAPI internals)
+python-multipart==0.0.20
+
+# ORM + SQLite (SQLite is bundled with Python – no extra driver needed)
+sqlalchemy==2.0.40
+
+# Data validation
+pydantic==2.11.3
+
+# Numeric / scientific (used in analysis utilities)
+numpy==2.2.4
+scipy==1.15.2
