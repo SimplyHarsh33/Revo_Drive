@@ -35,7 +35,7 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpd
     async function setupCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 1280, height: 720 },
+          video: { width: 640, height: 480 },
           audio: false,
         });
         
