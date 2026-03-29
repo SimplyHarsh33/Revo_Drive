@@ -41,7 +41,7 @@ export const useObjectDetect = (
     const detectFrame = async () => {
       if (video.readyState >= 2) {
         frameCount++;
-        if (frameCount % 5 === 0) {
+        if (frameCount % 30 === 0) {
           const predictions = await modelRef.current!.detect(video);
           
           if (canvas.width !== video.videoWidth) {
