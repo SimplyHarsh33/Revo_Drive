@@ -11,7 +11,7 @@ function App() {
   const [detectedObjects, setDetectedObjects] = useState<string[]>([]);
   const [yawnCount, setYawnCount] = useState(0);
   const [sessionId, setSessionId] = useState<number | null>(null);
-  const { playCriticalAlarm, initAudio } = useAlertSound();
+  const { alertDrowsiness, alertCellPhone, alertYawning, initAudio } = useAlertSound();
 
   const handleSystemStart = () => {
     initAudio();
@@ -35,7 +35,7 @@ function App() {
       setYawnCount(prev => {
         const newCount = prev + 1;
         if (newCount > 3) {
-          playCriticalAlarm();
+          alertYawning();
           if (sessionId) logTelemetryEvent(sessionId, "EXCESSIVE_YAWNING");
         }
         return newCount;
@@ -54,17 +54,18 @@ function App() {
   useEffect(() => {
     const alarmInterval = setInterval(() => {
       if (drowsinessRef.current > 70) {
-        playCriticalAlarm();
+        alertDrowsiness();
         if (sessionId) logTelemetryEvent(sessionId, "CRITICAL_DROWSINESS");
       }
     }, 1500); 
     
     return () => clearInterval(alarmInterval);
-  }, [playCriticalAlarm, sessionId]);
+  }, [alertDrowsiness, sessionId]);
 
   // 4. Object Detection Analytics (Cell Phone 2-Second Hold Rule)
   const lastObjectLog = useRef<number>(0);
   const phoneStartTimeRef = useRef<number | null>(null);
+  const lastPhoneAlertRef = useRef<number>(0); // Cooldown for voice alert
 
   useEffect(() => {
     if (detectedObjects.includes("cell phone")) {
@@ -76,7 +77,14 @@ function App() {
       } 
       // Driver has been holding the phone -> Check if > 2000 milliseconds (2 seconds)
       else if (now - phoneStartTimeRef.current > 2000) {
-         playCriticalAlarm(); 
+         // Only fire voice alert once per 10 seconds — prevents continuous replay
+         if (now - lastPhoneAlertRef.current > 10000) {
+           alertCellPhone();
+           lastPhoneAlertRef.current = now;
+         }
+         
+         // Reset start time so driver must hold phone for 2 more seconds to trigger again
+         phoneStartTimeRef.current = now;
          
          // Log to FastAPI Database with a 3-second cooldown to prevent backend spam
          if (sessionId && (now - lastObjectLog.current > 3000)) { 
@@ -88,7 +96,7 @@ function App() {
       // Driver put the phone back down before the 2-second threshold, reset timer
       phoneStartTimeRef.current = null;
     }
-  }, [detectedObjects, sessionId, playCriticalAlarm]);
+  }, [detectedObjects, sessionId, alertCellPhone]);
 
   // Calculate status colors dynamically based on drowsy score
   const statusColor = drowsiness > 70 ? 'from-red-500 to-orange-500' : drowsiness > 40 ? 'from-yellow-500 to-orange-500' : 'from-blue-500 to-indigo-500';
