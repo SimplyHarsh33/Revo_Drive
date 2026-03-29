@@ -6,15 +6,17 @@ import { useObjectDetect } from '../hooks/useObjectDetect';
 interface WebcamFeedProps {
   onDrowsinessUpdate: (score: number) => void;
   onDetectUpdate: (items: string[]) => void;
+  onYawnUpdate?: (isYawning: boolean) => void;
 }
 
-const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpdate }) => {
+const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpdate, onYawnUpdate }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const objectCanvasRef = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState<string | null>(null);
 
   const { isLoaded: isFaceLoaded, drowsinessScore, isYawning, startInference: startFaceMesh } = useFaceMesh(videoRef, canvasRef);
-  const { isLoaded: isObjectLoaded, detectedItems, startDetection: startObjectDetect } = useObjectDetect(videoRef);
+  const { isLoaded: isObjectLoaded, detectedItems, startDetection: startObjectDetect } = useObjectDetect(videoRef, objectCanvasRef);
 
   useEffect(() => {
     onDrowsinessUpdate(drowsinessScore);
@@ -26,7 +28,8 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpd
       activeAlerts.push("Yawning Detected");
     }
     onDetectUpdate(activeAlerts);
-  }, [detectedItems, isYawning, onDetectUpdate]);
+    if (onYawnUpdate) onYawnUpdate(isYawning);
+  }, [detectedItems, isYawning, onDetectUpdate, onYawnUpdate]);
 
   useEffect(() => {
     async function setupCamera() {
@@ -116,6 +119,11 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpd
           {/* Canvas for Drawing FaceMesh over standard video */}
           <canvas
             ref={canvasRef}
+            className="absolute inset-0 w-full h-full object-cover transform -scale-x-100 z-10 pointer-events-none"
+          />
+          {/* Dedicated Canvas for Drawing TF.js Object Bounding Boxes */}
+          <canvas
+            ref={objectCanvasRef}
             className="absolute inset-0 w-full h-full object-cover transform -scale-x-100 z-10 pointer-events-none"
           />
         </>
