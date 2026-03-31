@@ -7,16 +7,17 @@ interface WebcamFeedProps {
   onDrowsinessUpdate: (score: number) => void;
   onDetectUpdate: (items: string[]) => void;
   onYawnUpdate?: (isYawning: boolean) => void;
+  onDistractedUpdate?: (isDistracted: boolean) => void;
   isSystemPaused: boolean;
 }
 
-const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpdate, onYawnUpdate, isSystemPaused }) => {
+const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpdate, onYawnUpdate, onDistractedUpdate, isSystemPaused }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const objectCanvasRef = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { isLoaded: isFaceLoaded, drowsinessScore, isYawning, startInference: startFaceMesh } = useFaceMesh(videoRef, canvasRef, isSystemPaused);
+  const { isLoaded: isFaceLoaded, drowsinessScore, isYawning, isDistracted, startInference: startFaceMesh } = useFaceMesh(videoRef, canvasRef, isSystemPaused);
   const { isLoaded: isObjectLoaded, detectedItems, startDetection: startObjectDetect } = useObjectDetect(videoRef, objectCanvasRef, isSystemPaused);
 
   useEffect(() => {
@@ -28,9 +29,13 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpd
     if (isYawning && !activeAlerts.includes("Yawning Detected")) {
       activeAlerts.push("Yawning Detected");
     }
+    if (isDistracted && !activeAlerts.includes("Distracted Gaze")) {
+      activeAlerts.push("Distracted Gaze");
+    }
     onDetectUpdate(activeAlerts);
     if (onYawnUpdate) onYawnUpdate(isYawning);
-  }, [detectedItems, isYawning, onDetectUpdate, onYawnUpdate]);
+    if (onDistractedUpdate) onDistractedUpdate(isDistracted);
+  }, [detectedItems, isYawning, isDistracted, onDetectUpdate, onYawnUpdate, onDistractedUpdate]);
 
   useEffect(() => {
     async function setupCamera() {

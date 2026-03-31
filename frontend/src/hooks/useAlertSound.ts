@@ -93,8 +93,12 @@ export const useAlertSound = () => {
     playVoiceAlert("Caution! Excessive yawning detected. Take a break before continuing!");
   }, [playVoiceAlert]);
 
+  const alertDistracted = useCallback(() => {
+    playVoiceAlert("Warning! Keep your eyes on the road. Distracted driving detected!");
+  }, [playVoiceAlert]);
+
   // Legacy alias kept so nothing else breaks
   const playCriticalAlarm = alertDrowsiness;
 
-  return { playBeep, playVoiceAlert, playCriticalAlarm, alertDrowsiness, alertCellPhone, alertYawning, initAudio };
+  return { playBeep, playVoiceAlert, playCriticalAlarm, alertDrowsiness, alertCellPhone, alertYawning, alertDistracted, initAudio };
 };

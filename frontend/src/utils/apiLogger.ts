@@ -35,3 +35,16 @@ export const logTelemetryEvent = async (sessionId: number, type: string) => {
     console.error("Failed to reach FastAPI Backend:", err);
   }
 };
+
+export const endSession = async (sessionId: number) => {
+  try {
+    // The keepalive flag tells the browser NOT to abort this PUT request when the tab is completely destroyed!
+    await fetch(`${API_URL}/sessions/${sessionId}/end`, {
+      method: "PUT",
+      keepalive: true
+    });
+    console.log(`[TEARDOWN SUCCESS] Gracefully closed Session #{sessionId} via background thread.`);
+  } catch(err) {
+    console.error("Failed to signal FastAPI shutdown:", err);
+  }
+};

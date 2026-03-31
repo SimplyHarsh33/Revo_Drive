@@ -111,3 +111,19 @@ This perfectly simulates a 3-day rapid-development lifecycle by 5 different engi
       Solution: Use yawnCountRef to track count, setYawnCount only for UI display.
 
 =========================================================
+
+5. DAY 5 - VIVA PREPARATION & PAUSE FEATURE (31 March 2026)
+-----------------------------------------------------------
+
+[x] ADVANCED EDGE AI RESOURCE MANAGEMENT
+    - Implemented a "Pause/Resume" feature for the AI tracking system to save battery while idling.
+    - Updated `App.tsx` with global state to halt backend DB calls during a pause.
+    - Created React `useRef` proxies in `useFaceMesh.ts` and `useObjectDetect.ts`
+      to safely skip heavy `requestAnimationFrame` inference while preserving state closures.
+    - UI: Added sleek framer-motion dark glassmorphic overlay indicating "System Paused" in `WebcamFeed.tsx`.
+
+[x] VIVA & DEPLOYMENT TOOLING
+    - Created `run_backend.bat` and `run_frontend.bat` files for instant Windows execution.
+    - Drafted `discussion.txt` containing advanced architectural Q&A (Offline capabilities, Memory leaks, Battery saving).
+
+=========================================================

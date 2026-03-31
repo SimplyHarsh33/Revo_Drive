@@ -7,12 +7,16 @@ import type { AlertToastData } from './components/AlertToast';
 import AlertLog from './components/AlertLog';
 import type { AlertLogEntry } from './components/AlertLog';
 import { useAlertSound } from './hooks/useAlertSound';
-import { createSession, logTelemetryEvent } from './utils/apiLogger';
+import { createSession, logTelemetryEvent, endSession } from './utils/apiLogger';
+import Dashboard from './components/Dashboard';
+import { useGPS } from './hooks/useGPS';
 
 function App() {
   const [isSystemActive, setIsSystemActive] = useState(false);
   const [isSystemPaused, setIsSystemPaused] = useState(false);
   const isSystemPausedRef = useRef(false);
+  const [currentTab, setCurrentTab] = useState<'TELEMETRY' | 'DASHBOARD'>('TELEMETRY');
+  const { speedMph } = useGPS();
   
   useEffect(() => {
     isSystemPausedRef.current = isSystemPaused;
@@ -21,13 +25,14 @@ function App() {
   const [drowsiness, setDrowsiness] = useState(0);
   const [detectedObjects, setDetectedObjects] = useState<string[]>([]);
   const [yawnCount, setYawnCount] = useState(0);
+  const [isDistracted, setIsDistracted] = useState(false);
   const [sessionId, setSessionId] = useState<number | null>(null);
-  const { alertDrowsiness, alertCellPhone, alertYawning, initAudio } = useAlertSound();
+  const { alertDrowsiness, alertCellPhone, alertYawning, alertDistracted, initAudio } = useAlertSound();
 
   // Toast + Log + Stats state
   const [toasts, setToasts] = useState<AlertToastData[]>([]);
   const [alertLog, setAlertLog] = useState<AlertLogEntry[]>([]);
-  const [stats, setStats] = useState({ drowsy: 0, phone: 0, yawns: 0 });
+  const [stats, setStats] = useState({ drowsy: 0, phone: 0, yawns: 0, gaze: 0 });
   const toastIdRef = useRef(0);
 
   // Helper: fires sound, shows toast, logs event, bumps stat
@@ -48,6 +53,7 @@ function App() {
       drowsy: prev.drowsy + (type === 'drowsiness' ? 1 : 0),
       phone:  prev.phone  + (type === 'phone'      ? 1 : 0),
       yawns:  prev.yawns  + (type === 'yawning'    ? 1 : 0),
+      gaze:   prev.gaze   + (type === 'distracted' ? 1 : 0),
     }));
     // Auto-dismiss toast after 4s
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
@@ -59,14 +65,49 @@ function App() {
   };
 
   // 1. Initialize DB Session on Load
+  const sessionInitializedRef = useRef(false);
   useEffect(() => {
-    createSession().then(id => {
-      if (id) {
-        setSessionId(id);
-        console.log("Connected to Backend Session ID:", id);
-      }
-    });
+    if (!sessionInitializedRef.current) {
+      sessionInitializedRef.current = true;
+      createSession().then(id => {
+        if (id) {
+          setSessionId(id);
+          console.log("Connected to Backend Session ID:", id);
+        }
+      });
+    }
   }, []);
+
+  // 1.5 Window Teardown Lifecycle (Browser Tab Close)
+  useEffect(() => {
+    const handleUnload = () => {
+      if (sessionId) {
+        // Send background keepalive signal to close DB entry
+        endSession(sessionId);
+      }
+    };
+
+    // Modern mobile & desktop tab close/switch intercept
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') handleUnload();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleUnload);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, [sessionId]);
+
+  // GPS Safety Override Protocol
+  useEffect(() => {
+    if (isSystemPaused && speedMph > 15) {
+      setIsSystemPaused(false);
+      pushAlert('phone', 'Vehicle speed > 15 MPH. AI Override Activated for safety!', 'GPS OVERRIDE', alertCellPhone);
+    }
+  }, [speedMph, isSystemPaused, alertCellPhone]);
 
   // 2. Track Yawning Limits and POST to DB
   const isYawningRef = useRef(false);
@@ -132,7 +173,42 @@ function App() {
     } else {
       phoneStartTimeRef.current = null;
     }
-  }, [detectedObjects, sessionId, alertCellPhone]);
+  }, [detectedObjects, sessionId, alertCellPhone, isSystemPaused]);
+
+  const isDistractedRef = useRef(isDistracted);
+  useEffect(() => {
+    isDistractedRef.current = isDistracted;
+  }, [isDistracted]);
+
+  // 5. Head Pose / Gaze Tracking (Distracted Driving 1.5-Second Hold Rule)
+  const distractedStartTimeRef = useRef<number | null>(null);
+  const lastDistractedAlertRef = useRef<number>(0);
+
+  useEffect(() => {
+    const checkInterval = setInterval(() => {
+      if (isSystemPausedRef.current) return;
+      
+      if (isDistractedRef.current) {
+        const now = Date.now();
+        if (!distractedStartTimeRef.current) {
+          distractedStartTimeRef.current = now;
+        } else if (now - distractedStartTimeRef.current >= 2000) {
+          if (now - lastDistractedAlertRef.current > 10000) {
+            pushAlert('distracted', 'Driver not looking at the road!', 'DISTRACTED DRIVING', alertDistracted);
+            lastDistractedAlertRef.current = now;
+            if (sessionId) logTelemetryEvent(sessionId, "DISTRACTED_DRIVING_WARNING");
+          }
+          // Do not reset the clock here completely, just let it loop 
+          // but we advance the timer so the cooldown doesn't blast alarms immediately.
+          distractedStartTimeRef.current = now;
+        }
+      } else {
+        distractedStartTimeRef.current = null;
+      }
+    }, 500); // Check half-second ticks
+
+    return () => clearInterval(checkInterval);
+  }, [sessionId, alertDistracted]);
 
   // Calculate status colors dynamically
   const statusColor = drowsiness > 70 ? 'from-red-500 to-orange-500' : drowsiness > 40 ? 'from-yellow-500 to-orange-500' : 'from-blue-500 to-indigo-500';
@@ -171,6 +247,22 @@ function App() {
         </div>
 
         <div className="flex gap-6 items-center">
+          {/* View Tabs */}
+          {isSystemActive && (
+             <div className="hidden lg:flex bg-black/40 border border-white/10 p-1 rounded-full text-xs font-bold tracking-wider">
+               <button onClick={() => setCurrentTab('TELEMETRY')} className={`px-4 py-1.5 rounded-full transition-all duration-300 ${currentTab === 'TELEMETRY' ? 'bg-blue-600/50 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'text-gray-400 hover:text-gray-200'}`}>Live Telemetry</button>
+               <button onClick={() => setCurrentTab('DASHBOARD')} className={`px-4 py-1.5 rounded-full transition-all duration-300 ${currentTab === 'DASHBOARD' ? 'bg-purple-600/50 text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'text-gray-400 hover:text-gray-200'}`}>Log Archive</button>
+             </div>
+          )}
+
+          {/* GPS Speed Badge */}
+          {isSystemActive && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-black/40 border border-white/10 rounded-full shadow-inner">
+              <span className={speedMph > 15 ? 'text-red-400 font-bold font-mono animate-pulse drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]' : 'text-emerald-400 font-mono'}>{speedMph} MPH</span>
+              <span className="text-[10px] text-gray-500 uppercase tracking-widest leading-none mt-0.5">GPS</span>
+            </div>
+          )}
+
           {/* Pause Button */}
           {isSystemActive && (
             <button
@@ -203,6 +295,11 @@ function App() {
                 <span className="text-yellow-400 font-bold">{stats.yawns}</span>
                 <span className="text-gray-500">Yawns</span>
               </div>
+              <div className="flex items-center gap-1.5 border-l border-white/10 pl-4 ml-2">
+                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                <span className="text-purple-400 font-bold">{stats.gaze}</span>
+                <span className="text-gray-500">Gaze</span>
+              </div>
             </div>
           )}
 
@@ -229,13 +326,24 @@ function App() {
         </div>
       </motion.header>
 
-      {/* Conditional rendering: Landing Screen OR Main Dashboard */}
+      {/* Conditional rendering: Landing Screen OR Main Dashboard OR Archive View */}
       <AnimatePresence mode="wait">
         {!isSystemActive ? (
           <LandingScreen key="landing" onStart={handleSystemStart} />
+        ) : currentTab === 'DASHBOARD' ? (
+          <motion.main
+            key="dashboard-view"
+            initial={{ opacity: 0, scale: 0.98, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, scale: 0.98, filter: 'blur(10px)' }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="container mx-auto p-4 sm:p-6 lg:p-8 relative z-10 mt-4 h-[85vh] flex"
+          >
+            <Dashboard />
+          </motion.main>
         ) : (
           <motion.main
-            key="dashboard"
+            key="telemetry-view"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
@@ -335,6 +443,7 @@ function App() {
                   onDrowsinessUpdate={setDrowsiness}
                   onDetectUpdate={setDetectedObjects}
                   onYawnUpdate={handleYawnUpdate}
+                  onDistractedUpdate={setIsDistracted}
                   isSystemPaused={isSystemPaused}
                 />
               </motion.div>

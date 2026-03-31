@@ -19,6 +19,7 @@ export const useFaceMesh = (
   const [isLoaded, setIsLoaded] = useState(false);
   const [drowsinessScore, setDrowsinessScore] = useState(0);
   const [isYawning, setIsYawning] = useState(false);
+  const [isDistracted, setIsDistracted] = useState(false);
   const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
   const animationRef = useRef<number | null>(null);
 
@@ -114,9 +115,42 @@ export const useFaceMesh = (
           const mar = calculateMAR(landmarks, MOUTH);
           setIsYawning(mar > 0.5); // If mouth is wide open, threshold is ~0.5
 
+          // ----------------------------------------------------
+          // Calculate Head Pose (Distracted Gaze)
+          // We use physical 3D Face Landmarks because Matrix math can fail if WebGL features differ!
+          // ----------------------------------------------------
+          const nose = landmarks[1];
+          const leftSide = landmarks[33];   // left eye outer corner
+          const rightSide = landmarks[263]; // right eye outer corner
+          
+          // If looking straight, the nose is perfectly in the middle (ratio ~1.0)
+          const leftDist = Math.abs(nose.x - leftSide.x);
+          const rightDist = Math.abs(rightSide.x - nose.x);
+          
+          const headYawRatio = leftDist / (rightDist + 0.000001);
+          
+          // Yaw check: > 2.0 = sharp right turn, < 0.5 = sharp left turn
+          const isYawAway = headYawRatio > 2.0 || headYawRatio < 0.5;
+          
+          // Pitch check (Up/Down): Use forehead(10), nose(1), chin(152)
+          const forehead = landmarks[10];
+          const chin = landmarks[152];
+          
+          const faceHeight = Math.abs(chin.y - forehead.y) + 0.000001;
+          const noseFromTop = Math.abs(nose.y - forehead.y);
+          const pitchRatio = noseFromTop / faceHeight;
+          
+          // Straight ahead: ratio ~0.55-0.65
+          // Looking down (phone in lap): ratio > 0.75 (nose moves toward chin)
+          // Looking up (away from road): ratio < 0.42 (nose moves toward forehead)
+          const isPitchAway = pitchRatio > 0.75 || pitchRatio < 0.42;
+          
+          setIsDistracted(isYawAway || isPitchAway);
+
         } else {
           setDrowsinessScore(0); 
           setIsYawning(false);
+          setIsDistracted(false);
         }
       }
       
@@ -126,5 +160,5 @@ export const useFaceMesh = (
     analyzeFrame();
   }, [videoRef, canvasRef]);
 
-  return { isLoaded, drowsinessScore, isYawning, startInference };
+  return { isLoaded, drowsinessScore, isYawning, isDistracted, startInference };
 };

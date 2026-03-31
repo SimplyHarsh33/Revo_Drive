@@ -57,3 +57,10 @@ Implementation Details:
 
 The "Forgot to Resume" Danger:
 If an evaluator asks "What if the driver forgets to hit Resume?", the ideal V2 solution is integrating the browser's `navigator.geolocation` API. If the system is paused, but GPS detects the vehicle moving faster than 15 mph, DriveSafe AI would automatically override the pause state and turn the recording back ON to ensure safety!
+
+---------------------------------------------------------
+
+Q6: Does tracking live GPS speed cause any performance issues or battery drain compared to the AI models?
+A6: No, tracking real-time GPS speed causes zero noticeable performance drops and is virtually a "zero-cost" operation.
+Unlike FaceMesh and TensorFlow models—which run heavy, matrix-multiplying computer vision algorithms 30 times every single second on the GPU—tracking geolocation uses a completely different, hardware-level system. 
+The `navigator.geolocation.watchPosition` API doesn't do any heavy math; it simply registers a listener with the Operating System. The OS handles all the difficult satellite or Wi-Fi triangulation natively and hands a single speed number back to the browser about once per second. Compared to edge AI rendering, listening for GPS is extremely lightweight and completely safe to implement without thermal throttling.

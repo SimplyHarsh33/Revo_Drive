@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export interface AlertToastData {
   id: number;
-  type: 'drowsiness' | 'phone' | 'yawning';
+  type: 'drowsiness' | 'phone' | 'yawning' | 'distracted';
   message: string;
 }
 
@@ -34,6 +34,14 @@ const toastConfig = {
     border: 'border-yellow-500/60',
     glow: 'shadow-[0_0_40px_rgba(234,179,8,0.5)]',
     dot: 'bg-yellow-400',
+  },
+  distracted: {
+    icon: '👀',
+    label: 'DISTRACTED GAZE',
+    color: 'from-purple-600/90 to-purple-800/90',
+    border: 'border-purple-500/60',
+    glow: 'shadow-[0_0_40px_rgba(168,85,247,0.5)]',
+    dot: 'bg-purple-400',
   },
 };
 

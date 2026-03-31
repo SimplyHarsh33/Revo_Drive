@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export interface AlertLogEntry {
   id: number;
-  type: 'drowsiness' | 'phone' | 'yawning';
+  type: 'drowsiness' | 'phone' | 'yawning' | 'distracted';
   timestamp: string;
   label: string;
 }
@@ -12,9 +12,10 @@ interface AlertLogProps {
 }
 
 const typeStyle = {
-  drowsiness: { dot: 'bg-red-500', text: 'text-red-400', icon: '😴' },
-  phone:      { dot: 'bg-orange-500', text: 'text-orange-400', icon: '📱' },
-  yawning:    { dot: 'bg-yellow-500', text: 'text-yellow-400', icon: '🥱' },
+  drowsiness:  { dot: 'bg-red-500', text: 'text-red-400', icon: '😴' },
+  phone:       { dot: 'bg-orange-500', text: 'text-orange-400', icon: '📱' },
+  yawning:     { dot: 'bg-yellow-500', text: 'text-yellow-400', icon: '🥱' },
+  distracted:  { dot: 'bg-purple-500', text: 'text-purple-400', icon: '👀' },
 };
 
 const AlertLog: React.FC<AlertLogProps> = ({ entries }) => {
