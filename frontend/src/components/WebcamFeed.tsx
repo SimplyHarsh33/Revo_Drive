@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useFaceMesh } from '../hooks/useFaceMesh';
 import { useObjectDetect } from '../hooks/useObjectDetect';
 
@@ -7,16 +7,17 @@ interface WebcamFeedProps {
   onDrowsinessUpdate: (score: number) => void;
   onDetectUpdate: (items: string[]) => void;
   onYawnUpdate?: (isYawning: boolean) => void;
+  isSystemPaused: boolean;
 }
 
-const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpdate, onYawnUpdate }) => {
+const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpdate, onYawnUpdate, isSystemPaused }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const objectCanvasRef = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { isLoaded: isFaceLoaded, drowsinessScore, isYawning, startInference: startFaceMesh } = useFaceMesh(videoRef, canvasRef);
-  const { isLoaded: isObjectLoaded, detectedItems, startDetection: startObjectDetect } = useObjectDetect(videoRef, objectCanvasRef);
+  const { isLoaded: isFaceLoaded, drowsinessScore, isYawning, startInference: startFaceMesh } = useFaceMesh(videoRef, canvasRef, isSystemPaused);
+  const { isLoaded: isObjectLoaded, detectedItems, startDetection: startObjectDetect } = useObjectDetect(videoRef, objectCanvasRef, isSystemPaused);
 
   useEffect(() => {
     onDrowsinessUpdate(drowsinessScore);
@@ -128,6 +129,24 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpd
           />
         </>
       )}
+
+      {/* Paused Overlay */}
+      <AnimatePresence>
+        {isSystemPaused && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[15] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center rounded-3xl"
+          >
+            <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center mb-4 border border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.3)]">
+              <span className="text-2xl">⏳</span>
+            </motion.div>
+            <h2 className="text-xl font-bold text-yellow-500 tracking-widest uppercase mb-1 drop-shadow-md">System Paused</h2>
+            <p className="text-sm font-mono text-yellow-200/60 drop-shadow-md">AI Inference & Telemetry Halted</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Bottom Overlay HUD */}
       <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black via-black/50 to-transparent z-10 pointer-events-none" />

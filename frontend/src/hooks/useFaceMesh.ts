@@ -9,8 +9,13 @@ const MOUTH = [61, 0, 13, 291, 0, 14];
 
 export const useFaceMesh = (
   videoRef: React.RefObject<HTMLVideoElement | null>,
-  canvasRef: React.RefObject<HTMLCanvasElement | null>
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  isPaused: boolean = false
 ) => {
+  const isPausedRef = useRef(isPaused);
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [drowsinessScore, setDrowsinessScore] = useState(0);
   const [isYawning, setIsYawning] = useState(false);
@@ -70,6 +75,15 @@ export const useFaceMesh = (
 
       if (video.currentTime !== lastVideoTime && video.readyState >= 2 && video.videoWidth > 0) {
         lastVideoTime = video.currentTime;
+        
+        if (isPausedRef.current) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          setDrowsinessScore(0);
+          setIsYawning(false);
+          animationRef.current = requestAnimationFrame(analyzeFrame);
+          return;
+        }
+
         const results = faceLandmarkerRef.current!.detectForVideo(video, performance.now());
         
         ctx.clearRect(0, 0, canvas.width, canvas.height);

@@ -11,6 +11,13 @@ import { createSession, logTelemetryEvent } from './utils/apiLogger';
 
 function App() {
   const [isSystemActive, setIsSystemActive] = useState(false);
+  const [isSystemPaused, setIsSystemPaused] = useState(false);
+  const isSystemPausedRef = useRef(false);
+  
+  useEffect(() => {
+    isSystemPausedRef.current = isSystemPaused;
+  }, [isSystemPaused]);
+
   const [drowsiness, setDrowsiness] = useState(0);
   const [detectedObjects, setDetectedObjects] = useState<string[]>([]);
   const [yawnCount, setYawnCount] = useState(0);
@@ -66,6 +73,7 @@ function App() {
   const yawnCountRef = useRef(0); // Ref prevents React Strict Mode double-increment bug
 
   const handleYawnUpdate = (currentlyYawning: boolean) => {
+    if (isSystemPausedRef.current) return;
     if (currentlyYawning && !isYawningRef.current) {
       yawnCountRef.current += 1;
       const newCount = yawnCountRef.current;
@@ -87,6 +95,7 @@ function App() {
   // 3. Trigger alarm if drowsiness stays critical
   useEffect(() => {
     const alarmInterval = setInterval(() => {
+      if (isSystemPausedRef.current) return;
       if (drowsinessRef.current > 70) {
         pushAlert('drowsiness', 'Driver drowsiness critical!', 'CRITICAL DROWSINESS', alertDrowsiness);
         if (sessionId) logTelemetryEvent(sessionId, "CRITICAL_DROWSINESS");
@@ -101,6 +110,10 @@ function App() {
   const lastPhoneAlertRef = useRef<number>(0);
 
   useEffect(() => {
+    if (isSystemPaused) {
+      phoneStartTimeRef.current = null;
+      return;
+    }
     if (detectedObjects.includes("cell phone")) {
       const now = Date.now();
       if (!phoneStartTimeRef.current) {
@@ -158,6 +171,20 @@ function App() {
         </div>
 
         <div className="flex gap-6 items-center">
+          {/* Pause Button */}
+          {isSystemActive && (
+            <button
+              onClick={() => setIsSystemPaused(!isSystemPaused)}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 border ${
+                isSystemPaused
+                  ? 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.3)]'
+                  : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10'
+              }`}
+            >
+              {isSystemPaused ? 'Resume AI ►' : 'Pause AI ⏸'}
+            </button>
+          )}
+
           {/* Stats Counters — only show when active */}
           {isSystemActive && (
             <div className="hidden sm:flex items-center gap-4 text-xs font-mono">
@@ -308,6 +335,7 @@ function App() {
                   onDrowsinessUpdate={setDrowsiness}
                   onDetectUpdate={setDetectedObjects}
                   onYawnUpdate={handleYawnUpdate}
+                  isSystemPaused={isSystemPaused}
                 />
               </motion.div>
 

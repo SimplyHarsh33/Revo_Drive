@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DriveSafe AI — Viva Preparation Guide</title>
+    <!-- Google Fonts for modern typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-primary: #3b82f6;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-card: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Glassmorphism card for the main wrapper */
+        .glass-panel {
+            background: var(--accent-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2, h3 {
+            color: var(--text-main);
+            margin-top: 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--accent-primary);
+            padding-bottom: 8px;
+            margin-top: 40px;
+            color: #38bdf8;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin-top: 32px;
+            color: #bae6fd;
+        }
+
+        .alert-box {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--accent-yellow);
+            padding: 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+            font-size: 0.95rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+            color: #38bdf8;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #fca5a5;
+        }
+
+        pre {
+            background: #000;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+            margin: 24px 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: #6ee7b7;
+            font-size: 0.9em;
+        }
+
+        .qa-block {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 16px 0;
+        }
+
+        .qa-block p {
+            margin: 0;
+        }
+
+        .qa-block p:first-child {
+            font-weight: 600;
+            color: #fde047;
+            margin-bottom: 8px;
+        }
+
+        .qa-block p:last-child {
+            color: var(--text-muted);
+        }
+
+        .print-btn {
+            display: block;
+            width: fit-content;
+            margin: 0 auto 40px;
+            padding: 12px 24px;
+            background: var(--accent-primary);
+            color: white;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+            transition: all 0.2s;
+        }
+
+        .print-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        /* --- Print Styles --- */
+        @media print {
+            body {
+                background: white;
+                color: black;
+                padding: 0;
+            }
+
+            .glass-panel {
+                background: white;
+                border: none;
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            h1, h2 {
+                color: black;
+                background: none;
+                -webkit-text-fill-color: black;
+                border-bottom: 2px solid black;
+            }
+            
+            h3 {
+                color: #333;
+            }
+
+            .print-btn {
+                display: none;
+            }
+
+            .alert-box {
+                border: 2px solid #ccc;
+                background: none;
+                color: black;
+            }
+
+            table {
+                border: 1px solid #ddd;
+                background: transparent;
+            }
+
+            th, td {
+                border: 1px solid #ddd;
+                color: black;
+            }
+
+            pre {
+                background: #f4f4f4;
+                border: 1px solid #ccc;
+            }
+
+            pre code {
+                color: #333;
+            }
+
+            code {
+                background: #f4f4f4;
+                color: #d11212;
+            }
+
+            .qa-block {
+                border: 1px solid #ccc;
+                background: transparent;
+                page-break-inside: avoid;
+            }
+
+            .qa-block p:first-child {
+                color: black;
+            }
+
+            .qa-block p:last-child {
+                color: #444;
+            }
+            
+            h2 {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="print-btn" onclick="window.print()">🖨️ Save as PDF</button>
+
+    <div class="container glass-panel">
+        <h1>🚗 DriveSafe AI</h1>
+        <div class="subtitle">Viva Preparation Reading Material | For the Entire Team | Semester 4 Project</div>
+
+        <div class="alert-box">
+            <strong>How to use this document:</strong> First read the <strong>"Everyone Must Know"</strong> section. Then jump to your own domain section. Each section has concept explanations + expected viva Q&A.
+        </div>
+
+        <section id="section-1">
+            <h2>📌 SECTION 1 — EVERYONE MUST KNOW</h2>
+
+            <h3>1.1 What is DriveSafe AI?</h3>
+            <p>DriveSafe AI is a <strong>real-time driver monitoring system</strong> that uses <strong>Edge AI</strong> — meaning all AI processing happens directly in the user's browser using the device's own GPU. No video is ever sent to any server, protecting driver privacy. When a dangerous event (drowsiness, phone use, yawning) is detected, it is logged to a backend database via a REST API.</p>
+            <p><strong>Key selling point:</strong> Runs entirely in-browser (zero cloud AI cost), but still persists telemetry to a central server.</p>
+
+            <h3>1.2 System Architecture (The Big Picture)</h3>
+            <pre><code>[Driver's Browser]
+│
+├── Webcam Feed (getUserMedia API)
+│     │
+│     ├── MediaPipe FaceMesh (WASM)        → EAR / MAR → Drowsiness / Yawning
+│     └── TensorFlow.js COCO-SSD (WebGL)  → Bounding Boxes → Phone Detection
+│
+├── React + TypeScript UI
+│     ├── LandingScreen (Boot Sequence)
+│     ├── AlertToast (Pop-up notifications)
+│     ├── AlertLog (Sidebar event history)
+│     └── Web Speech API (Voice Alerts)
+│
+└── HTTP POST (fetch) → FastAPI Backend (Port 8000)
+                              │
+                        SQLAlchemy ORM
+                              │
+                        SQLite Database (revodrive.db)</code></pre>
+
+            <h3>1.3 Technology Stack Summary</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Layer</th>
+                        <th>Technology</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Frontend Framework</td><td>React + Vite + TypeScript</td><td>UI and component architecture</td></tr>
+                    <tr><td>Styling</td><td>Tailwind CSS v3</td><td>Glassmorphic dark theme</td></tr>
+                    <tr><td>Animation</td><td>Framer Motion</td><td>Smooth UI transitions</td></tr>
+                    <tr><td>Face AI</td><td>MediaPipe FaceMesh (WASM)</td><td>468 facial landmark detection</td></tr>
+                    <tr><td>Object AI</td><td>TensorFlow.js + COCO-SSD</td><td>Cell phone detection</td></tr>
+                    <tr><td>Voice</td><td>Web Speech API</td><td>Zero-cost voice alerts</td></tr>
+                    <tr><td>Backend</td><td>FastAPI (Python)</td><td>REST API server</td></tr>
+                    <tr><td>ORM</td><td>SQLAlchemy</td><td>Python-to-database bridge</td></tr>
+                    <tr><td>Validation</td><td>Pydantic</td><td>Request/Response data schemas</td></tr>
+                    <tr><td>Database</td><td>SQLite (dev) / PostgreSQL (prod)</td><td>Persistent telemetry storage</td></tr>
+                    <tr><td>DevOps</td><td>Docker + docker-compose</td><td>Containerized deployment</td></tr>
+                </tbody>
+            </table>
+
+            <h3>1.4 What is Edge AI?</h3>
+            <p><strong>Edge AI</strong> means running the artificial intelligence model on the same device that collects the data, instead of sending data to a remote server (cloud).</p>
+            <ul>
+                <li><strong>Cloud AI:</strong> Camera → Upload video to server → Server runs AI → Send result back → Slow, costly, privacy risk</li>
+                <li><strong>Edge AI:</strong> Camera → Run AI in browser → Instant result → Only log <em>events</em> to server ✅</li>
+            </ul>
+
+            <h3>1.5 Common Viva Questions</h3>
+            
+            <div class="qa-block">
+                <p>Q: What is the main purpose of this project?</p>
+                <p>A: To monitor driver alertness in real-time using AI that runs directly in the browser (Edge AI), and log dangerous events (drowsiness, phone use, yawning) to a central database for post-trip analysis.</p>
+            </div>
+
+            <div class="qa-block">
+                <p>Q: Why did you choose Edge AI instead of sending video to a server?</p>
+                <p>A: Three reasons — (1) Real-time speed: local inference is ~instant, no network delay. (2) Privacy: no driver video ever leaves the device. (3) Cost: cloud inference APIs charge per call; WebAssembly and WebGL are free.</p>
+            </div>
+
+            <div class="qa-block">
+                <p>Q: What does the backend actually store?</p>
+                <p>A: It stores two things — a <strong>Session</strong> (a driving trip, with start/end time) and <strong>Events</strong> (individual alerts like "DROWSY at 14:32:05 with EAR score 0.18").</p>
+            </div>
+            
+            <div class="qa-block">
+                <p>Q: What is CORS and why is it needed?</p>
+                <p>A: Cross-Origin Resource Sharing. The frontend runs on port 5173, the backend on port 8000. Browsers block cross-port requests by default. FastAPI's CORSMiddleware explicitly permits this.</p>
+            </div>
+        </section>
+
+        <section id="section-2">
+            <h2>🔧 SECTION 2 — BACKEND (Harsh)</h2>
+
+            <h3>2.1 Technology: FastAPI</h3>
+            <p>FastAPI is a modern Python web framework for building REST APIs. It is based on <strong>Python type hints</strong>, automatically generates <strong>interactive docs</strong> (Swagger UI), and uses an <strong>async-capable</strong> ASGI server (Uvicorn).</p>
+
+            <h3>2.3 How `db.py` Works</h3>
+            <pre><code>SQLALCHEMY_DATABASE_URL = "sqlite:///./revodrive.db"
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+# "check_same_thread": False is needed because SQLite was designed for single-thread
+# use, but FastAPI handles multiple requests simultaneously (multi-threaded).
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# SessionLocal is a "factory" — every time you call SessionLocal(), you get a
+# new database session (like a transaction).</code></pre>
+
+            <h3>2.5 What is an ORM?</h3>
+            <p><strong>ORM = Object Relational Mapper.</strong> Instead of writing raw SQL (<code>INSERT INTO sessions...</code>), you write standard Python classes, and SQLAlchemy translates them into SQL automatically.</p>
+
+            <h3>2.7 Viva Q&A — Backend</h3>
+            <div class="qa-block">
+                <p>Q: What is the difference between a Pydantic model and a SQLAlchemy model?</p>
+                <p>A: A <strong>Pydantic model</strong> defines the shape of data coming IN and going OUT of the API (JSON validation). A <strong>SQLAlchemy model</strong> defines the database TABLE structure.</p>
+            </div>
+            <div class="qa-block">
+                <p>Q: What does `Depends(get_db)` do?</p>
+                <p>A: It's FastAPI's Dependency Injection. It automatically passes a live database session to each endpoint and closes it afterwards to prevent memory leaks.</p>
+            </div>
+            <div class="qa-block">
+                <p>Q: What is Uvicorn?</p>
+                <p>A: Uvicorn is an ASGI (Asynchronous Server Gateway Interface) server. It's what actually runs the FastAPI app and listens for HTTP requests.</p>
+            </div>
+        </section>
+
+        <section id="section-3">
+            <h2>🎨 SECTION 3 — FRONTEND UI & ALARMS (Jivit)</h2>
+
+            <h3>3.1 Technology: React + Vite + TypeScript</h3>
+            <p><strong>React</strong> uses a <strong>Virtual DOM</strong> — React updates only the changed parts of the screen, not the whole page. <strong>Vite</strong> acts as a super-fast build tool using ES Modules. <strong>TypeScript</strong> catches type errors at compile-time.</p>
+
+            <h3>3.3 How the Landing Boot Sequence Works</h3>
+            <p>Without the <code>LandingScreen.tsx</code> boot sequence, the browser requests camera permission immediately on page load, which looks unprofessional and can fail before models load. Our boot sequence delays to load "MediaPipe WASM Cores" and "TensorFlow.js WebGL" visually.</p>
+
+            <h3>3.4 How the Web Speech API Works</h3>
+            <pre><code>const utterance = new SpeechSynthesisUtterance(
+    "Alert! Driver drowsiness detected. Please pull over!"
+);
+window.speechSynthesis.speak(utterance);</code></pre>
+            <p>This is a built-in browser API (zero cost). We added a 3-second <code>setTimeout</code> cooldown to prevent voices from endlessly stacking.</p>
+
+            <h3>3.7 Viva Q&A — Frontend</h3>
+            <div class="qa-block">
+                <p>Q: What is the Virtual DOM in React?</p>
+                <p>A: React keeps a lightweight in-memory copy of the DOM. When state changes, it computes the difference (diff) between old and new state, then only updates the changed DOM nodes instead of re-rendering everything.</p>
+            </div>
+            <div class="qa-block">
+                <p>Q: What is the difference between useState and useRef?</p>
+                <p>A: `useState` triggers a whole UI re-render when the value changes. `useRef` stores a value that persists without triggering a re-render. We used `useRef` to fix the double-increment yawn bug in React 18 Strict Mode.</p>
+            </div>
+        </section>
+
+        <section id="section-4">
+            <h2>🧠 SECTION 4 — ML FACEMESH CORE (Mallika)</h2>
+
+            <h3>4.1 Technology: MediaPipe FaceMesh</h3>
+            <p>MediaPipe FaceMesh detects <strong>468 3D facial landmarks</strong> in real-time via <strong>WebAssembly (WASM)</strong>, running C++ speed directly inside the browser without plugins.</p>
+
+            <h3>4.2 Eye Aspect Ratio (EAR)</h3>
+            <pre><code>EAR = (Vertical_Distance_1 + Vertical_Distance_2) / (2.0 * Horizontal_Distance)</code></pre>
+            <p>Based on Soukupova & Cech 2016. If the EAR drops below ~0.25 on average for both eyes, the driver is flagged as drowsy.</p>
+
+            <h3>4.6 Viva Q&A — ML FaceMesh</h3>
+            <div class="qa-block">
+                <p>Q: What is the EAR formula and what does it measure?</p>
+                <p>A: It measures the openness of the eye using 6 facial landmarks per eye. EAR drops toward 0 as the eye closes.</p>
+            </div>
+            <div class="qa-block">
+                <p>Q: What is WebAssembly (WASM)?</p>
+                <p>A: A binary format that runs in browsers at near-native speed. It allows MediaPipe's C++ ML engine to run in JS.</p>
+            </div>
+        </section>
+
+        <section id="section-5">
+            <h2>📦 SECTION 5 — ML OBJECT DETECTION (Divyanshu)</h2>
+
+            <h3>5.1 Technology: TensorFlow.js + COCO-SSD</h3>
+            <p><strong>TensorFlow.js</strong> runs directly in the browser via <strong>WebGL</strong> (GPU acceleration). <strong>COCO-SSD</strong> ("Single Shot MultiBox Detector") detects 80 object classes, including the `cell phone`.</p>
+
+            <h3>5.3 The 2-Second Hold Logic</h3>
+            <p>A 1-frame "flash" of a cell phone might be a false positive. We only trigger the alarm if the `cell phone` is continuously detected for 2+ seconds using timestamp tracking.</p>
+
+            <h3>5.4 Frame Throttling</h3>
+            <p>Running ML inference 60 times a second crashes browsers. We use a modulo operation <code>frameCount % 30 === 0</code> inside <code>requestAnimationFrame</code> to run detection merely 1-2 times per second.</p>
+
+            <h3>5.6 Viva Q&A — Object Detection</h3>
+            <div class="qa-block">
+                <p>Q: What is COCO-SSD and how does it work?</p>
+                <p>A: SSD (Single Shot Detector) detects objects and their bounding box positions in a single neural network forward pass, making it fast enough for live video.</p>
+            </div>
+            <div class="qa-block">
+                <p>Q: What is WebGL and why does TensorFlow.js use it?</p>
+                <p>A: WebGL is a browser API for GPU graphics. TensorFlow.js uses it as a "backend" to run massive matrix math on the GPU rather than the slower CPU.</p>
+            </div>
+        </section>
+
+        <section id="section-6">
+            <h2>🐳 SECTION 6 — DEVOPS (Hemant)</h2>
+
+            <h3>6.1 Technology: Docker & Compose</h3>
+            <p>Docker packages our app and all its dependencies into an isolated <strong>container</strong> that runs identically on any machine, eliminating "works on my machine" issues.</p>
+
+            <h3>6.2 Understanding `docker-compose.yml`</h3>
+            <pre><code>services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db</code></pre>
+            <p>It binds our host's port 8000 to the container's 8000, and ensures the PostgreSQL database spins up before the FastAPI server.</p>
+
+            <h3>6.6 Viva Q&A — DevOps</h3>
+            <div class="qa-block">
+                <p>Q: What is the difference between an image and a container?</p>
+                <p>A: An <strong>image</strong> is a read-only blueprint. A <strong>container</strong> is a specific running instance of that image.</p>
+            </div>
+            <div class="qa-block">
+                <p>Q: Why use PostgreSQL in Docker instead of SQLite directly?</p>
+                <p>A: SQLite is a single file and struggles with concurrent reads/writes under heavy traffic. PostgreSQL is a full client-server database built for production.</p>
+            </div>
+        </section>
+
+    </div>
+</body>
+</html>

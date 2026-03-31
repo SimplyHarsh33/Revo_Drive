@@ -4,8 +4,13 @@ import '@tensorflow/tfjs';
 
 export const useObjectDetect = (
   videoRef: React.RefObject<HTMLVideoElement | null>,
-  canvasRef: React.RefObject<HTMLCanvasElement | null>
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  isPaused: boolean = false
 ) => {
+  const isPausedRef = useRef(isPaused);
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [detectedItems, setDetectedItems] = useState<string[]>([]);
   const modelRef = useRef<cocoSsd.ObjectDetection | null>(null);
@@ -40,6 +45,13 @@ export const useObjectDetect = (
     
     const detectFrame = async () => {
       if (video.readyState >= 2) {
+        if (isPausedRef.current) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          setDetectedItems([]);
+          animationRef.current = requestAnimationFrame(detectFrame);
+          return;
+        }
+
         frameCount++;
         if (frameCount % 30 === 0) {
           const predictions = await modelRef.current!.detect(video);
