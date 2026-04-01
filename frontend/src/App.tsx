@@ -40,9 +40,10 @@ function App() {
     type: AlertToastData['type'],
     message: string,
     label: string,
+    playSound: boolean,
     soundFn: () => void
   ) => {
-    soundFn();
+    if (playSound) soundFn();
     const id = ++toastIdRef.current;
     const timestamp = new Date().toLocaleTimeString('en-IN', {
       hour: '2-digit', minute: '2-digit', second: '2-digit'
@@ -105,13 +106,14 @@ function App() {
   useEffect(() => {
     if (isSystemPaused && speedMph > 15) {
       setIsSystemPaused(false);
-      pushAlert('phone', 'Vehicle speed > 15 MPH. AI Override Activated for safety!', 'GPS OVERRIDE', alertCellPhone);
+      pushAlert('phone', 'Vehicle speed > 15 MPH. AI Override Activated for safety!', 'GPS OVERRIDE', true, alertCellPhone);
     }
   }, [speedMph, isSystemPaused, alertCellPhone]);
 
   // 2. Track Yawning Limits and POST to DB
   const isYawningRef = useRef(false);
   const yawnCountRef = useRef(0); // Ref prevents React Strict Mode double-increment bug
+  const pendingYawnAlertRef = useRef(false);
 
   const handleYawnUpdate = (currentlyYawning: boolean) => {
     if (isSystemPausedRef.current) return;
@@ -120,8 +122,7 @@ function App() {
       const newCount = yawnCountRef.current;
       setYawnCount(newCount);
       if (newCount > 3) {
-        pushAlert('yawning', 'Excessive yawning detected!', 'EXCESSIVE YAWNING', alertYawning);
-        if (sessionId) logTelemetryEvent(sessionId, "EXCESSIVE_YAWNING");
+        pendingYawnAlertRef.current = true; // Queue for Master Loop
       }
     }
     isYawningRef.current = currentlyYawning;
@@ -133,82 +134,110 @@ function App() {
     drowsinessRef.current = drowsiness;
   }, [drowsiness]);
 
-  // 3. Trigger alarm if drowsiness stays critical
-  useEffect(() => {
-    const alarmInterval = setInterval(() => {
-      if (isSystemPausedRef.current) return;
-      if (drowsinessRef.current > 70) {
-        pushAlert('drowsiness', 'Driver drowsiness critical!', 'CRITICAL DROWSINESS', alertDrowsiness);
-        if (sessionId) logTelemetryEvent(sessionId, "CRITICAL_DROWSINESS");
-      }
-    }, 1500);
-    return () => clearInterval(alarmInterval);
-  }, [alertDrowsiness, sessionId]);
+  const detectedObjectsRef = useRef(detectedObjects);
+  useEffect(() => { detectedObjectsRef.current = detectedObjects; }, [detectedObjects]);
 
-  // 4. Object Detection Analytics (Cell Phone 2-Second Hold Rule)
+  const isDistractedRef = useRef(isDistracted);
+  useEffect(() => { isDistractedRef.current = isDistracted; }, [isDistracted]);
+
+  const lastDrowsyAlertRef = useRef<number>(0);
+  const lastYawnAlertRef = useRef<number>(0);
   const lastObjectLog = useRef<number>(0);
   const phoneStartTimeRef = useRef<number | null>(null);
   const lastPhoneAlertRef = useRef<number>(0);
-
-  useEffect(() => {
-    if (isSystemPaused) {
-      phoneStartTimeRef.current = null;
-      return;
-    }
-    if (detectedObjects.includes("cell phone")) {
-      const now = Date.now();
-      if (!phoneStartTimeRef.current) {
-        phoneStartTimeRef.current = now;
-      } else if (now - phoneStartTimeRef.current > 2000) {
-        if (now - lastPhoneAlertRef.current > 10000) {
-          pushAlert('phone', 'Phone usage while driving!', 'PHONE DETECTED', alertCellPhone);
-          lastPhoneAlertRef.current = now;
-        }
-        phoneStartTimeRef.current = now;
-        if (sessionId && (now - lastObjectLog.current > 3000)) {
-          logTelemetryEvent(sessionId, "CELLPHONE_DETECTED_WARNING");
-          lastObjectLog.current = now;
-        }
-      }
-    } else {
-      phoneStartTimeRef.current = null;
-    }
-  }, [detectedObjects, sessionId, alertCellPhone, isSystemPaused]);
-
-  const isDistractedRef = useRef(isDistracted);
-  useEffect(() => {
-    isDistractedRef.current = isDistracted;
-  }, [isDistracted]);
-
-  // 5. Head Pose / Gaze Tracking (Distracted Driving 1.5-Second Hold Rule)
   const distractedStartTimeRef = useRef<number | null>(null);
   const lastDistractedAlertRef = useRef<number>(0);
 
+  // 3. CENTRALIZED MASTER ALERT LOOP (Priority: Drowsiness > Yawning > Phone > Gaze)
   useEffect(() => {
     const checkInterval = setInterval(() => {
-      if (isSystemPausedRef.current) return;
-      
+      if (isSystemPausedRef.current) {
+        phoneStartTimeRef.current = null;
+        distractedStartTimeRef.current = null;
+        return;
+      }
+
+      const now = Date.now();
+      const activeInfractions: Array<{
+        priority: number, 
+        type: AlertToastData['type'], 
+        msg: string, 
+        label: string, 
+        sound: () => void, 
+        dbLog?: string
+      }> = [];
+
+      // Priority 1: Drowsiness (1.5s cooldown)
+      if (drowsinessRef.current > 70) {
+        if (now - lastDrowsyAlertRef.current > 1500) {
+           activeInfractions.push({ priority: 1, type: 'drowsiness', msg: 'Driver drowsiness critical!', label: 'CRITICAL DROWSINESS', sound: alertDrowsiness, dbLog: 'CRITICAL_DROWSINESS' });
+           lastDrowsyAlertRef.current = now;
+        }
+      }
+
+      // Priority 2: Yawning (2s cooldown, triggered via pending flag)
+      if (pendingYawnAlertRef.current) {
+        if (now - lastYawnAlertRef.current > 2000) {
+           activeInfractions.push({ priority: 2, type: 'yawning', msg: 'Excessive yawning detected!', label: 'EXCESSIVE YAWNING', sound: alertYawning, dbLog: 'EXCESSIVE_YAWNING' });
+           lastYawnAlertRef.current = now;
+        }
+        pendingYawnAlertRef.current = false; // Processed
+      }
+
+      // Priority 3: Cell Phone (2s hold inside frame, 10s cooldown between alarms)
+      if (detectedObjectsRef.current.includes("cell phone")) {
+        if (!phoneStartTimeRef.current) phoneStartTimeRef.current = now;
+        else if (now - phoneStartTimeRef.current > 2000) {
+           if (now - lastPhoneAlertRef.current > 10000) {
+              activeInfractions.push({ priority: 3, type: 'phone', msg: 'Phone usage while driving!', label: 'PHONE DETECTED', sound: alertCellPhone, dbLog: 'CELLPHONE_DETECTED_WARNING' });
+              lastPhoneAlertRef.current = now;
+              // Do not reset hold timer, let it cooldown naturally or re-trigger if they hold it continuously
+              phoneStartTimeRef.current = now; 
+           }
+        }
+      } else {
+        phoneStartTimeRef.current = null;
+      }
+
+      // Priority 4: Distracted Gaze (2s eyes off road, 10s cooldown)
       if (isDistractedRef.current) {
-        const now = Date.now();
-        if (!distractedStartTimeRef.current) {
-          distractedStartTimeRef.current = now;
-        } else if (now - distractedStartTimeRef.current >= 2000) {
-          if (now - lastDistractedAlertRef.current > 10000) {
-            pushAlert('distracted', 'Driver not looking at the road!', 'DISTRACTED DRIVING', alertDistracted);
-            lastDistractedAlertRef.current = now;
-            if (sessionId) logTelemetryEvent(sessionId, "DISTRACTED_DRIVING_WARNING");
-          }
-          // Do not reset the clock here completely, just let it loop 
-          // but we advance the timer so the cooldown doesn't blast alarms immediately.
-          distractedStartTimeRef.current = now;
+        if (!distractedStartTimeRef.current) distractedStartTimeRef.current = now;
+        else if (now - distractedStartTimeRef.current > 2000) {
+           if (now - lastDistractedAlertRef.current > 10000) {
+              activeInfractions.push({ priority: 4, type: 'distracted', msg: 'Driver not looking at the road!', label: 'DISTRACTED DRIVING', sound: alertDistracted, dbLog: 'DISTRACTED_DRIVING_WARNING' });
+              lastDistractedAlertRef.current = now;
+              distractedStartTimeRef.current = now;
+           }
         }
       } else {
         distractedStartTimeRef.current = null;
       }
-    }, 500); // Check half-second ticks
+
+      // Process and Dispatch Alerts
+      if (activeInfractions.length > 0) {
+        // Sort by highest priority first (1 is highest)
+        activeInfractions.sort((a, b) => a.priority - b.priority);
+
+        activeInfractions.forEach((infraction, index) => {
+           // Only play the audio sound for the absolute highest priority infraction
+           const playSound = index === 0;
+           
+           pushAlert(infraction.type, infraction.msg, infraction.label, playSound, infraction.sound);
+           
+           if (sessionId && infraction.dbLog) {
+             // Enforce slight DB logging cooldown globally to avoid rapid-fire DB locks
+             if (now - lastObjectLog.current > 1000) {
+               logTelemetryEvent(sessionId, infraction.dbLog);
+               lastObjectLog.current = now;
+             }
+           }
+        });
+      }
+
+    }, 500); // Master check every half-second
 
     return () => clearInterval(checkInterval);
-  }, [sessionId, alertDistracted]);
+  }, [sessionId, alertDrowsiness, alertYawning, alertCellPhone, alertDistracted]);
 
   // Calculate status colors dynamically
   const statusColor = drowsiness > 70 ? 'from-red-500 to-orange-500' : drowsiness > 40 ? 'from-yellow-500 to-orange-500' : 'from-blue-500 to-indigo-500';
@@ -238,7 +267,7 @@ function App() {
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent tracking-tight">
-              DriveSafe AI
+              RevoDrive
             </h1>
             <p className="text-xs font-medium text-blue-300/60 uppercase tracking-widest hidden sm:block">
               Intelligent Telemetry Core

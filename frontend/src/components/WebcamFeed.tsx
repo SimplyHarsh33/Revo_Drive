@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFaceMesh } from '../hooks/useFaceMesh';
 import { useObjectDetect } from '../hooks/useObjectDetect';
+import { useGPS } from '../hooks/useGPS';
 
 interface WebcamFeedProps {
   onDrowsinessUpdate: (score: number) => void;
@@ -19,6 +20,7 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpd
 
   const { isLoaded: isFaceLoaded, drowsinessScore, isYawning, isDistracted, startInference: startFaceMesh } = useFaceMesh(videoRef, canvasRef, isSystemPaused);
   const { isLoaded: isObjectLoaded, detectedItems, startDetection: startObjectDetect } = useObjectDetect(videoRef, objectCanvasRef, isSystemPaused);
+  const { latitude, longitude } = useGPS();
 
   useEffect(() => {
     onDrowsinessUpdate(drowsinessScore);
@@ -159,7 +161,9 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpd
         <div className="flex gap-4">
           <div className="bg-black/50 backdrop-blur-md border border-white/10 px-5 py-3 rounded-xl shadow-lg">
             <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1 font-semibold">Location</p>
-            <p className="text-sm font-mono text-white tracking-widest">LAT 34.050 • LNG -118.243</p>
+            <p className="text-sm font-mono text-white tracking-widest">
+              {latitude !== null && longitude !== null ? `LAT ${latitude.toFixed(3)} • LNG ${longitude.toFixed(3)}` : "Locating..."}
+            </p>
           </div>
           <div className="bg-blue-900/40 backdrop-blur-md border border-blue-500/40 px-5 py-3 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.2)]">
             <p className="text-[10px] text-blue-300 uppercase tracking-widest mb-1 font-semibold">AI Scanner</p>

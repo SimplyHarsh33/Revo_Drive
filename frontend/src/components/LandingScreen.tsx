@@ -93,7 +93,7 @@ const LandingScreen: React.FC<LandingScreenProps> = ({ onStart }) => {
           {/* Title */}
           <div className="text-center mb-2">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent tracking-tight">
-              DriveSafe AI
+              RevoDrive
             </h1>
             <p className="text-xs text-blue-300/50 uppercase tracking-[0.25em] mt-2 font-medium">
               Edge Telemetry & Driver Intelligence System

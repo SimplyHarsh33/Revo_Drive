@@ -4,6 +4,8 @@ export const useGPS = () => {
   const [speedMph, setSpeedMph] = useState<number>(0);
   const [isGPSActive, setIsGPSActive] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
 
   useEffect(() => {
     if (!('geolocation' in navigator)) {
@@ -14,6 +16,8 @@ export const useGPS = () => {
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
         setIsGPSActive(true);
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
         // Browser speed is natively in meters per second
         // 1 meter/second = 2.23694 miles/hour
         if (position.coords.speed !== null) {
@@ -39,5 +43,5 @@ export const useGPS = () => {
     };
   }, []);
 
-  return { speedMph, isGPSActive, error };
+  return { speedMph, isGPSActive, error, latitude, longitude };
 };
