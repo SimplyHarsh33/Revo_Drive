@@ -15,10 +15,10 @@ export const useObjectDetect = (
   const [detectedItems, setDetectedItems] = useState<string[]>([]);
   const modelRef = useRef<cocoSsd.ObjectDetection | null>(null);
   const animationRef = useRef<number | null>(null);
+  const prevItemsRef = useRef<string>('[]'); // Guard to prevent setState on unchanged arrays
 
   useEffect(() => {
     async function initModel() {
-      // Load the COCO-SSD model using WebGL backend automatically via TF.js
       const model = await cocoSsd.load();
       modelRef.current = model;
       setIsLoaded(true);
@@ -39,10 +39,10 @@ export const useObjectDetect = (
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    
-    // Optimizaton: Run object detection every 5 frames
+
+    // Run object detection every 5 frames
     let frameCount = 0;
-    
+
     const detectFrame = async () => {
       if (video.readyState >= 2) {
         if (isPausedRef.current) {
@@ -53,34 +53,33 @@ export const useObjectDetect = (
         }
 
         frameCount++;
-        if (frameCount % 30 === 0) {
+        if (frameCount % 5 === 0) {
           const predictions = await modelRef.current!.detect(video);
-          
+
           if (canvas.width !== video.videoWidth) {
              canvas.width = video.videoWidth;
              canvas.height = video.videoHeight;
           }
-          
-          // Clear previous frames
+
           ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Proxy list: cell phone + all commonly misclassified objects
+          const PHONE_PROXIES = ["cell phone", "remote", "book", "bottle", "mouse"];
 
           // Draw the Bounding Boxes!
           predictions.forEach(p => {
-             // Dynamic threshold: 25% for occluded cell phones at the ear, 40% for everything else
-             const threshold = p.class === "cell phone" ? 0.25 : 0.40;
+             // 15% confidence for phone proxies, 40% for everything else
+             const threshold = PHONE_PROXIES.includes(p.class) ? 0.15 : 0.40;
              if (p.score > threshold) {
                const [x, y, width, height] = p.bbox;
-               
-               // Bounding Box Path
-               ctx.strokeStyle = '#EF4444'; // Aggressive Red
+
+               ctx.strokeStyle = '#EF4444';
                ctx.lineWidth = 4;
                ctx.strokeRect(x, y, width, height);
 
-               // Bounding Box Title Background
                ctx.fillStyle = '#EF4444';
                ctx.fillRect(x - 2, y - 30, width + 4, 30);
 
-               // Bounding Box Text Label (Un-mirror text over mirrored video CSS)
                ctx.save();
                ctx.scale(-1, 1);
                ctx.font = 'bold 18px monospace';
@@ -89,18 +88,22 @@ export const useObjectDetect = (
                ctx.restore();
              }
           });
-          
-          // Filter using the dynamic 25% cell phone threshold to update React State Hooks
+
           const items = predictions
-             .filter(p => p.score > (p.class === "cell phone" ? 0.25 : 0.40)) 
+             .filter(p => p.score > (PHONE_PROXIES.includes(p.class) ? 0.15 : 0.40))
              .map(p => p.class);
-             
-          setDetectedItems(items);
+
+          // Only update state if the detected items actually changed
+          const itemsJson = JSON.stringify(items.slice().sort());
+          if (itemsJson !== prevItemsRef.current) {
+            prevItemsRef.current = itemsJson;
+            setDetectedItems(items);
+          }
         }
       }
       animationRef.current = requestAnimationFrame(detectFrame);
     };
-    
+
     detectFrame();
   }, [videoRef, canvasRef]);
 
