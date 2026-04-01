@@ -126,4 +126,13 @@ This perfectly simulates a 3-day rapid-development lifecycle by 5 different engi
     - Created `run_backend.bat` and `run_frontend.bat` files for instant Windows execution.
     - Drafted `discussion.txt` containing advanced architectural Q&A (Offline capabilities, Memory leaks, Battery saving).
 
+[x] CENTRALIZED ALERT MANAGER & AUDIO PRIORITY
+    - Refactored `App.tsx` from 4 independent interval loops into a single Master Loop running a 500ms heartbeat.
+    - Implemented strict audio priority routing: Drowsiness (1) > Yawning (2) > Cell Phone (3) > Distracted Gaze (4).
+    - Prevents audio alarm overlap while still pushing visual toasts and logging all telemetry infractions simultaneously.
+
+[x] LIVE GPS INTEGRATION
+    - Modified `useGPS.ts` to tap into `navigator.geolocation` for extracting live Latitude and Longitude.
+    - Updated `WebcamFeed.tsx` HUD to dynamically render active location instead of hardcoded coordinates.
+
 =========================================================
