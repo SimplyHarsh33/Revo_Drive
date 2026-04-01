@@ -66,7 +66,9 @@ export const useObjectDetect = (
 
           // Draw the Bounding Boxes!
           predictions.forEach(p => {
-             if (p.score > 0.40) {
+             // Dynamic threshold: 25% for occluded cell phones at the ear, 40% for everything else
+             const threshold = p.class === "cell phone" ? 0.25 : 0.40;
+             if (p.score > threshold) {
                const [x, y, width, height] = p.bbox;
                
                // Bounding Box Path
@@ -88,9 +90,9 @@ export const useObjectDetect = (
              }
           });
           
-          // Filter with a more sensitive 40% confidence threshold to update React State Hooks
+          // Filter using the dynamic 25% cell phone threshold to update React State Hooks
           const items = predictions
-             .filter(p => p.score > 0.40) 
+             .filter(p => p.score > (p.class === "cell phone" ? 0.25 : 0.40)) 
              .map(p => p.class);
              
           setDetectedItems(items);
