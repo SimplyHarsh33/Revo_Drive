@@ -140,6 +140,7 @@ function App() {
   const isDistractedRef = useRef(isDistracted);
   useEffect(() => { isDistractedRef.current = isDistracted; }, [isDistracted]);
 
+  const drowsyStartTimeRef = useRef<number | null>(null);
   const lastDrowsyAlertRef = useRef<number>(0);
   const lastYawnAlertRef = useRef<number>(0);
   const lastObjectLog = useRef<number>(0);
@@ -152,6 +153,7 @@ function App() {
   useEffect(() => {
     const checkInterval = setInterval(() => {
       if (isSystemPausedRef.current) {
+        drowsyStartTimeRef.current = null;
         phoneStartTimeRef.current = null;
         distractedStartTimeRef.current = null;
         return;
@@ -167,12 +169,18 @@ function App() {
         dbLog?: string
       }> = [];
 
-      // Priority 1: Drowsiness (1.5s cooldown)
+      // Priority 1: Drowsiness (1.5s continuous hold, 2s cooldown)
       if (drowsinessRef.current > 70) {
-        if (now - lastDrowsyAlertRef.current > 1500) {
-           activeInfractions.push({ priority: 1, type: 'drowsiness', msg: 'Driver drowsiness critical!', label: 'CRITICAL DROWSINESS', sound: alertDrowsiness, dbLog: 'CRITICAL_DROWSINESS' });
-           lastDrowsyAlertRef.current = now;
+        if (!drowsyStartTimeRef.current) drowsyStartTimeRef.current = now;
+        else if (now - drowsyStartTimeRef.current > 1500) { // Driver must hold eyes closed for 1.5s
+           if (now - lastDrowsyAlertRef.current > 2000) {   // 2s cooldown so it doesn't spam
+              activeInfractions.push({ priority: 1, type: 'drowsiness', msg: 'Driver drowsiness critical!', label: 'CRITICAL DROWSINESS', sound: alertDrowsiness, dbLog: 'CRITICAL_DROWSINESS' });
+              lastDrowsyAlertRef.current = now;
+              drowsyStartTimeRef.current = now; // reset hold timer so it requires another 1.5s before re-triggering
+           }
         }
+      } else {
+        drowsyStartTimeRef.current = null;
       }
 
       // Priority 2: Yawning (2s cooldown, triggered via pending flag)
@@ -185,7 +193,8 @@ function App() {
       }
 
       // Priority 3: Cell Phone (2s hold inside frame, 10s cooldown between alarms)
-      if (detectedObjectsRef.current.includes("cell phone")) {
+      const isHoldingObject = detectedObjectsRef.current.some(obj => ["cell phone", "remote", "book", "bottle", "mouse"].includes(obj));
+      if (isHoldingObject) {
         if (!phoneStartTimeRef.current) phoneStartTimeRef.current = now;
         else if (now - phoneStartTimeRef.current > 2000) {
            if (now - lastPhoneAlertRef.current > 10000) {
