@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_URL } from '../utils/apiLogger';
 
 interface Event {
   id: number;
@@ -24,7 +25,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     async function fetchSessions() {
       try {
-        const res = await fetch('http://localhost:8000/sessions/');
+        const res = await fetch(`${API_URL}/sessions/`);
         if (res.ok) {
           const data: Session[] = await res.json();
           // Sort by ID descending (newest first)

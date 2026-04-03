@@ -1,5 +1,5 @@
 // 🛠️ Hardcoded for Viva - 100% Reliable
-const API_URL = "https://revodrive-backend.onrender.com"; 
+export const API_URL = "https://revodrive-backend.onrender.com"; 
 
 // 🚀 DEBUG LOG: 
 console.log("DriveSafe AI — Connecting to LIVE API at:", API_URL);
