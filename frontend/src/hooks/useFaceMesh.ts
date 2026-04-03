@@ -22,6 +22,10 @@ export const useFaceMesh = (
   const [isDistracted, setIsDistracted] = useState(false);
   const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
   const animationRef = useRef<number | null>(null);
+  // Prev-value guards to prevent setState on every frame (fixes infinite re-render loop)
+  const prevScoreRef = useRef<number>(-1);
+  const prevYawningRef = useRef<boolean>(false);
+  const prevDistractedRef = useRef<boolean>(false);
 
   useEffect(() => {
     async function initModel() {
@@ -109,11 +113,12 @@ export const useFaceMesh = (
           const leftEAR = calculateEAR(landmarks, LEFT_EYE);
           const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
           const score = calculateDrowsinessScore(leftEAR, rightEAR, 0.25);
-          setDrowsinessScore(score);
+          if (score !== prevScoreRef.current) { prevScoreRef.current = score; setDrowsinessScore(score); }
 
           // Calculate Yawning (MAR)
           const mar = calculateMAR(landmarks, MOUTH);
-          setIsYawning(mar > 0.5); // If mouth is wide open, threshold is ~0.5
+          const nowYawning = mar > 0.5;
+          if (nowYawning !== prevYawningRef.current) { prevYawningRef.current = nowYawning; setIsYawning(nowYawning); }
 
           // ----------------------------------------------------
           // Calculate Head Pose (Distracted Gaze)
@@ -144,13 +149,13 @@ export const useFaceMesh = (
           // Looking down (phone in lap): ratio > 0.75 (nose moves toward chin)
           // Looking up (away from road): ratio < 0.42 (nose moves toward forehead)
           const isPitchAway = pitchRatio > 0.75 || pitchRatio < 0.42;
-          
-          setIsDistracted(isYawAway || isPitchAway);
+          const nowDistracted = isYawAway || isPitchAway;
+          if (nowDistracted !== prevDistractedRef.current) { prevDistractedRef.current = nowDistracted; setIsDistracted(nowDistracted); }
 
         } else {
-          setDrowsinessScore(0); 
-          setIsYawning(false);
-          setIsDistracted(false);
+          if (prevScoreRef.current !== 0) { prevScoreRef.current = 0; setDrowsinessScore(0); }
+          if (prevYawningRef.current !== false) { prevYawningRef.current = false; setIsYawning(false); }
+          if (prevDistractedRef.current !== false) { prevDistractedRef.current = false; setIsDistracted(false); }
         }
       }
       

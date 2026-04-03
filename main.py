@@ -8,15 +8,12 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="DriveSafe AI Backend")
 
-# Configure CORS
-origins = [
-    "*", # Allow all origins for development
-]
-
+# 🚀 Production CORS Configuration
+# We allow everything (*) for your Viva to ensure zero connection issues.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False, # Must be False if allow_origins is ["*"]
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -28,4 +25,4 @@ app.include_router(websocket.router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to DriveSafe AI API"}
+    return {"message": "Welcome to DriveSafe AI API - Production is LIVE!"}

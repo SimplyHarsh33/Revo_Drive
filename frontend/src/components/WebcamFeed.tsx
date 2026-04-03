@@ -22,9 +22,19 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpd
   const { isLoaded: isObjectLoaded, detectedItems, startDetection: startObjectDetect } = useObjectDetect(videoRef, objectCanvasRef, isSystemPaused);
   const { latitude, longitude } = useGPS();
 
+  // Wrap callbacks in refs so they never cause this useEffect to re-run
+  const onDrowsinessUpdateRef = useRef(onDrowsinessUpdate);
+  const onDetectUpdateRef = useRef(onDetectUpdate);
+  const onYawnUpdateRef = useRef(onYawnUpdate);
+  const onDistractedUpdateRef = useRef(onDistractedUpdate);
+  useEffect(() => { onDrowsinessUpdateRef.current = onDrowsinessUpdate; }, [onDrowsinessUpdate]);
+  useEffect(() => { onDetectUpdateRef.current = onDetectUpdate; }, [onDetectUpdate]);
+  useEffect(() => { onYawnUpdateRef.current = onYawnUpdate; }, [onYawnUpdate]);
+  useEffect(() => { onDistractedUpdateRef.current = onDistractedUpdate; }, [onDistractedUpdate]);
+
   useEffect(() => {
-    onDrowsinessUpdate(drowsinessScore);
-  }, [drowsinessScore, onDrowsinessUpdate]);
+    onDrowsinessUpdateRef.current(drowsinessScore);
+  }, [drowsinessScore]);
 
   useEffect(() => {
     let activeAlerts = [...detectedItems];
@@ -34,10 +44,10 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onDrowsinessUpdate, onDetectUpd
     if (isDistracted && !activeAlerts.includes("Distracted Gaze")) {
       activeAlerts.push("Distracted Gaze");
     }
-    onDetectUpdate(activeAlerts);
-    if (onYawnUpdate) onYawnUpdate(isYawning);
-    if (onDistractedUpdate) onDistractedUpdate(isDistracted);
-  }, [detectedItems, isYawning, isDistracted, onDetectUpdate, onYawnUpdate, onDistractedUpdate]);
+    onDetectUpdateRef.current(activeAlerts);
+    if (onYawnUpdateRef.current) onYawnUpdateRef.current(isYawning);
+    if (onDistractedUpdateRef.current) onDistractedUpdateRef.current(isDistracted);
+  }, [detectedItems, isYawning, isDistracted]);
 
   useEffect(() => {
     async function setupCamera() {

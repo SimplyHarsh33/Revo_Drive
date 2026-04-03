@@ -1,4 +1,6 @@
-const API_URL = "http://127.0.0.1:8000";
+// Uses VITE_API_URL from environment variables, or falls back to localhost for development
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 
 export const createSession = async () => {
   try {
@@ -10,7 +12,7 @@ export const createSession = async () => {
     if (!res.ok) throw new Error("Backend connection failed");
     const data = await res.json();
     return data.id; // Returns the DB primary key for the new session
-  } catch(err) {
+  } catch (err) {
     console.error("FastAPI Backend Offline:", err);
     return null;
   }
@@ -29,9 +31,9 @@ export const logTelemetryEvent = async (sessionId: number, type: string) => {
       })
     });
     if (res.ok) {
-       console.log(`[API SUCCESS] Logged ${type} to FastAPI Database!`);
+      console.log(`[API SUCCESS] Logged ${type} to FastAPI Database!`);
     }
-  } catch(err) {
+  } catch (err) {
     console.error("Failed to reach FastAPI Backend:", err);
   }
 };
@@ -44,7 +46,7 @@ export const endSession = async (sessionId: number) => {
       keepalive: true
     });
     console.log(`[TEARDOWN SUCCESS] Gracefully closed Session #{sessionId} via background thread.`);
-  } catch(err) {
+  } catch (err) {
     console.error("Failed to signal FastAPI shutdown:", err);
   }
 };
