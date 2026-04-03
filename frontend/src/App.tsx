@@ -287,9 +287,9 @@ function App() {
         <div className="flex gap-6 items-center">
           {/* View Tabs */}
           {isSystemActive && (
-             <div className="hidden lg:flex bg-black/40 border border-white/10 p-1 rounded-full text-xs font-bold tracking-wider">
-               <button onClick={() => setCurrentTab('TELEMETRY')} className={`px-4 py-1.5 rounded-full transition-all duration-300 ${currentTab === 'TELEMETRY' ? 'bg-blue-600/50 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'text-gray-400 hover:text-gray-200'}`}>Live Telemetry</button>
-               <button onClick={() => setCurrentTab('DASHBOARD')} className={`px-4 py-1.5 rounded-full transition-all duration-300 ${currentTab === 'DASHBOARD' ? 'bg-purple-600/50 text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'text-gray-400 hover:text-gray-200'}`}>Log Archive</button>
+             <div className="flex bg-black/40 border border-white/10 p-1 rounded-full text-[10px] sm:text-xs font-bold tracking-wider">
+               <button onClick={() => setCurrentTab('TELEMETRY')} className={`px-2 sm:px-4 py-1.5 rounded-full transition-all duration-300 ${currentTab === 'TELEMETRY' ? 'bg-blue-600/50 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'text-gray-400 hover:text-gray-200'}`}>Telemetry</button>
+               <button onClick={() => setCurrentTab('DASHBOARD')} className={`px-2 sm:px-4 py-1.5 rounded-full transition-all duration-300 ${currentTab === 'DASHBOARD' ? 'bg-purple-600/50 text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'text-gray-400 hover:text-gray-200'}`}>Archives</button>
              </div>
           )}
 
@@ -317,26 +317,22 @@ function App() {
 
           {/* Stats Counters — only show when active */}
           {isSystemActive && (
-            <div className="hidden sm:flex items-center gap-4 text-xs font-mono">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs font-mono">
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500"></span>
                 <span className="text-red-400 font-bold">{stats.drowsy}</span>
-                <span className="text-gray-500">Drowsy</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-orange-500"></span>
                 <span className="text-orange-400 font-bold">{stats.phone}</span>
-                <span className="text-gray-500">Phone</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-yellow-500"></span>
                 <span className="text-yellow-400 font-bold">{stats.yawns}</span>
-                <span className="text-gray-500">Yawns</span>
               </div>
-              <div className="flex items-center gap-1.5 border-l border-white/10 pl-4 ml-2">
+              <div className="hidden sm:flex items-center gap-1.5 border-l border-white/10 pl-4 ml-2">
                 <span className="w-2 h-2 rounded-full bg-purple-500"></span>
                 <span className="text-purple-400 font-bold">{stats.gaze}</span>
-                <span className="text-gray-500">Gaze</span>
               </div>
             </div>
           )}
