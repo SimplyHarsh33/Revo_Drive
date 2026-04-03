@@ -1,6 +1,9 @@
 // Uses VITE_API_URL from environment variables, or falls back to localhost for development
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
+// 🚀 DEBUG LOG: This will show us the REAL URL on Vercel
+console.log("DriveSafe AI — Connecting to API at:", API_URL);
+
 
 export const createSession = async () => {
   try {
