@@ -81,12 +81,4 @@ npm install
 npm run dev
 ```
 
----
-
-## 📍 Viva Reference Material
-- **Edge AI Benefits**: Privacy (video never leaves device), Latency (real-time alerts), Cost (zero server GPU costs).
-- **Relational Integrity**: Telemetry is linked to sessions via Foreign Keys in PostgreSQL.
-- **Schema Validation**: Pydantic ensures only clean telemetry enters the data warehouse.
-
----
 *Created for the Fourth Semester Engineering Project - © 2026 RevoDrive Team.*
